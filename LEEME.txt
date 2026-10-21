@@ -1,0 +1,16 @@
+ISLETAS - juego de tácticas por turnos
+
+Cómo jugar: abrí index.html con doble clic en cualquier navegador (no necesita internet,
+salvo para cargar las tipografías; sin conexión usa unas de reemplazo).
+
+Reglas:
+- 2 jugadores en la misma pantalla. Cada turno tenés 3 acciones.
+- Cada acción = una ficha hace UNA cosa: mover, pegar de cerca o disparar.
+- Movimiento y ataque de cerca solo en cruz (sin diagonales).
+- Ataque: ataque + 2d6 >= defensa del rival = impacto, le sacás tanta vida como tu daño.
+- Doble 6 = crítico (+1 daño). Doble 1 = pifia.
+- Árboles, casas y pozos tapan la vista. Calabazas, arbustos y agua solo frenan el paso.
+
+Las fichas que crees o edites se guardan en el navegador.
+Los mapas están en el array MAPS dentro de index.html (# vacío, . pasto, 1/2 salidas,
+T árbol, H casa, W pozo, o arbusto, p calabaza, ~ agua).
