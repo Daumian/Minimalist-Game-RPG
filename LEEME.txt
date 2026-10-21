@@ -7,8 +7,11 @@ Mapa del mundo:
 - Tocá el mapa para mover a tu equipo. Los bosques frenan, las rocas no se atraviesan.
 - Las patrullas rivales deambulan y te persiguen si te acercás. Si te alcanzan, se pelea.
 - El castillo es zona segura: ahí no entran y tu equipo recupera toda la vida.
-- Tenés 3 lugares en el equipo activo; el resto queda en la banca (Sacar / Meter).
-- Al ganar, uno de los rivales que todavía no tengas se suma a tu colección.
+- De viaje llevás hasta 6 personajes: 3 en el equipo activo y el resto en la reserva.
+  Los demás de tu colección te esperan en el castillo; ahí podés cambiar quién viaja.
+- Al ganar, uno de los rivales que todavía no tengas se suma (a la reserva, o al castillo si ya llevás 6).
+- "Invictos" cuenta las batallas ganadas seguidas; vuelve a 0 al perder.
+- Con "Ver" se abre el retrato en pixel art y las stats completas del personaje.
 - La vida perdida se mantiene. Quien cae en una pelea ganada vuelve con 1 vida.
   Si perdés, volvés al castillo con todos curados. También podés huir en tu turno.
 
@@ -16,9 +19,10 @@ Combate (vos contra la máquina):
 - Cada turno tenés 3 acciones. Cada acción = una ficha hace UNA cosa: mover, pegar de cerca o disparar.
 - Movimiento solo en cruz (sin diagonales). El volador pasa por encima de fichas, obstáculos y agua.
 - Ataque de cerca a cualquiera de las 8 casillas de alrededor.
-- Ataque: ataque + 2d6 >= defensa del rival = impacto, le sacás tanta vida como tu daño.
-- Doble 6 = crítico (+1 daño). Doble 1 = pifia.
-- Árboles, casas y pozos tapan la vista. Cada ficha, calabaza o arbusto en el medio resta 1 al tiro.
+- Stats: Vida, Movimiento, % ataque cerca, daño cerca, % ataque lejos, distancia lejos y daño lejos.
+- Se tira un dado de 100: si sale igual o menos que el % de ataque, es impacto y saca el daño correspondiente.
+- Del 1 al 5 es crítico (+1 daño).
+- Árboles, casas y pozos tapan la vista. Cada ficha, calabaza o arbusto en el medio resta 10% al tiro.
 - Los mapas de combate se generan al azar (a veces sale uno de los hechos a mano).
 
 El progreso (colección, equipo y posición) se guarda en el navegador.

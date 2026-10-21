@@ -77,7 +77,7 @@ header p{margin:0;color:var(--muted)}
 .unit-head .dot.j1{outline:2px solid var(--p1)} .unit-head .dot.j2{outline:2px solid var(--p2)}
 .unit-head b{font-size:1.1rem}
 .unit-head small{color:var(--muted)}
-.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
 .stats div{background:#fff;color:#111;border-radius:4px;text-align:center;padding:5px 0 3px;font-family:var(--f-num);font-weight:700;font-size:1.3rem;line-height:1.05;font-variant-numeric:tabular-nums}
 .stats small{display:block;font-size:.8rem;font-weight:600;color:#555}
 .hearts{display:flex;gap:4px;flex-wrap:wrap;font-size:1.15rem}
@@ -85,12 +85,10 @@ header p{margin:0;color:var(--muted)}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .hint{color:var(--muted);margin:0;line-height:1.45}
 .dicebox{display:flex;align-items:center;gap:14px}
-.dice{display:flex;gap:8px}
-.die{width:46px;height:46px;background:#fff;border-radius:8px;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:6px;box-shadow:inset 0 -3px 0 #ccc}
-.die span{width:9px;height:9px;border-radius:50%;background:#111;place-self:center}
-.die.rolling{animation:shake .12s infinite}
+.d100{flex:none;width:64px;height:56px;background:#fff;color:#111;border-radius:8px;display:grid;place-items:center;font-family:var(--f-num);font-weight:700;font-size:1.7rem;box-shadow:inset 0 -3px 0 #ccc;font-variant-numeric:tabular-nums}
+.d100.rolling{animation:shake .12s infinite}
 @keyframes shake{0%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}100%{transform:rotate(-8deg)}}
-@media (prefers-reduced-motion:reduce){.die.rolling{animation:none}.tok{transition:none}}
+@media (prefers-reduced-motion:reduce){.d100.rolling{animation:none}.tok{transition:none}}
 #rollinfo{font-family:var(--f-num);font-size:1.05rem;line-height:1.3;min-width:0}
 #rollinfo .res{font-family:var(--f-display);font-size:1.6rem;letter-spacing:.04em;display:block}
 .res.hit{color:var(--good)} .res.miss{color:var(--red)}
@@ -124,6 +122,21 @@ h2.sub small{font-family:var(--f-num);font-size:1rem;color:var(--muted);letter-s
 #wlog{list-style:none;margin:0;padding:8px 0 0;max-height:130px;overflow-y:auto;font-size:13.5px;display:flex;flex-direction:column;gap:3px;border-top:1px solid #555}
 #wlog li{color:var(--muted)} #wlog li:first-child{color:var(--ink)}
 .result{display:flex;flex-direction:column;gap:10px}
+/* Retratos en pixel art */
+.pix{display:block;image-rendering:pixelated}
+.hero{grid-template-columns:auto minmax(0,1fr)}
+.hero .thumb{grid-row:span 2;align-self:start;background:#55555c;border:0;border-radius:4px;padding:3px 4px}
+.hero .btns{display:flex;gap:5px;flex-wrap:wrap}
+.streak{margin-left:auto;font-family:var(--f-num);font-size:1rem;font-weight:700;letter-spacing:.04em;background:var(--panel2);color:var(--ink);padding:2px 8px;border-radius:4px}
+dialog{background:var(--panel);color:var(--ink);border:0;border-radius:8px;padding:18px;width:min(92vw,460px)}
+dialog::backdrop{background:rgba(0,0,0,.6)}
+#dlg-body{display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:480px){#dlg-body{grid-template-columns:minmax(0,1fr)}}
+.portrait{background:linear-gradient(#8fc8dc,#d4ebf2 70%,#b9d68f 70%);border-radius:6px;display:grid;place-items:center;padding:14px 18px 10px}
+.statlist{display:flex;flex-direction:column}
+.statlist div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid #4a4a50;padding:4px 0;font-size:14px}
+.statlist b{font-family:var(--f-num);font-size:1.05rem}
+.muted{color:var(--muted)}
 </style>
 
 <header>
@@ -137,7 +150,7 @@ h2.sub small{font-family:var(--f-num);font-size:1rem;color:var(--muted);letter-s
     <div class="legend">
       <span>⚫ Tu equipo</span>
       <span>⊗ Patrulla rival (<b style="color:#e3363e">!</b> = te persigue)</span>
-      <span>🏰 Castillo: zona segura, recupera vida</span>
+      <span>🏰 Castillo: zona segura, recupera vida y cambiás quién viaja</span>
       <span>🌲 Bosque: más lento</span>
     </div>
   </section>
@@ -148,17 +161,19 @@ h2.sub small{font-family:var(--f-num);font-size:1rem;color:var(--muted);letter-s
     <div class="legend">
       <span><i style="background:var(--p1)"></i>Tu equipo</span>
       <span><i style="background:var(--p2)"></i>Rival</span>
-      <span>🌲🏠⛲ tapan la vista · 🎃🌿 y fichas restan 1 al tiro · 💧 solo frena el paso</span>
+      <span>🌲🏠⛲ tapan la vista · 🎃🌿 y fichas restan 10% al tiro · 💧 solo frena el paso</span>
     </div>
   </section>
 
   <aside class="side">
     <div id="world-panel" class="stack">
-      <h2 class="sub">Equipo activo <small id="party-count"></small></h2>
+      <h2 class="sub">Equipo activo <small id="party-count"></small><span class="streak" id="streak" title="Batallas ganadas seguidas. Se reinicia al perder."></span></h2>
       <div class="roster" id="party"></div>
-      <h2 class="sub">Banca <small id="coll-count"></small></h2>
+      <h2 class="sub">Reserva <small id="res-count"></small></h2>
       <div class="roster" id="bench"></div>
-      <p class="hint">Tocá el mapa para moverte. Las patrullas te persiguen si te acercás; en el castillo no entran. Al ganar, uno de los rivales que no tengas se suma a tu colección.</p>
+      <h2 class="sub">Castillo <small id="coll-count"></small></h2>
+      <div class="roster" id="barracks"></div>
+      <p class="hint">Tocá el mapa para moverte. Las patrullas te persiguen si te acercás; en el castillo no entran. De viaje llevás hasta 6 (3 activos + reserva); el resto te espera en el castillo. Al ganar, uno de los rivales que no tengas se suma.</p>
       <ol id="wlog"></ol>
       <div class="cfg"><button class="btn ml" id="btn-reset">Borrar progreso</button></div>
     </div>
@@ -170,8 +185,8 @@ h2.sub small{font-family:var(--f-num);font-size:1rem;color:var(--muted);letter-s
       </div>
       <div id="unitpanel" class="stack"></div>
       <div class="dicebox">
-        <div class="dice"><div class="die" id="d1"></div><div class="die" id="d2"></div></div>
-        <div id="rollinfo"><span class="hint">Los dados aparecen al atacar.</span></div>
+        <div class="d100" id="d100" title="Dado de 100">🎲</div>
+        <div id="rollinfo"><span class="hint">El dado de 100 aparece al atacar.</span></div>
       </div>
       <ol id="log"></ol>
       <div class="cfg"><button class="btn ml" id="btn-flee">🏃 Huir</button></div>
@@ -180,10 +195,9 @@ h2.sub small{font-family:var(--f-num);font-size:1rem;color:var(--muted);letter-s
         <ul>
           <li>Cada turno tenés <b>3 acciones</b>. Cada acción es una ficha haciendo <b>una</b> cosa: mover, pegar de cerca o disparar. Esa ficha ya no actúa más ese turno.</li>
           <li><b>Mover:</b> hasta 👟 casillas en cruz (sin diagonales), sin atravesar fichas ni obstáculos. Los <b>voladores</b> 🕊️ pasan por encima de todo.</li>
-          <li><b>Cuerpo a cuerpo:</b> a un enemigo pegado, diagonales incluidas.</li>
-          <li><b>A distancia:</b> a ⚡ casillas o menos (contando en cruz). Árboles, casas y pozos tapan la vista; cada ficha, arbusto o calabaza en el medio resta 1 al tiro.</li>
-          <li><b>Ataque:</b> 👊 + 2d6 ≥ 🛡️ del rival = impacto. El rival pierde tantos ❤️ como tu 💥.</li>
-          <li>Doble 6 = crítico (+1 daño). Doble 1 = pifia, falla siempre.</li>
+          <li><b>Cuerpo a cuerpo:</b> a un enemigo pegado, diagonales incluidas. Acierta con 👊% y saca 💥 de vida.</li>
+          <li><b>A distancia:</b> a 📏 casillas o menos (contando en cruz). Acierta con 🏹% y saca 🎯 de vida. Árboles, casas y pozos tapan la vista; cada ficha, arbusto o calabaza en el medio resta 10%.</li>
+          <li><b>Tirada:</b> se tira un dado de 100. Si sale igual o menos que el %, es impacto. Del 1 al 5 es crítico (+1 daño).</li>
           <li>La vida perdida se mantiene al volver al mapa. Quien cae en una pelea ganada vuelve con 1 ❤️. Si perdés, el equipo vuelve al castillo.</li>
         </ul>
       </details>
@@ -191,26 +205,32 @@ h2.sub small{font-family:var(--f-num);font-size:1rem;color:var(--muted);letter-s
   </aside>
 </main>
 
+<dialog id="dlg-hero" aria-label="Ficha del personaje">
+  <div id="dlg-body"></div>
+  <form method="dialog" class="cfg" style="margin-top:14px"><button class="btn ml">Cerrar</button></form>
+</dialog>
+
 <script>
-const STATS=[['hp','❤️','Vida'],['spd','👟','Movimiento'],['atk','👊','Ataque'],['def','🛡️','Defensa'],['dmg','💥','Daño'],['range','⚡','Rango']];
-const ACTIONS=3, PARTY_MAX=3;
-/* Clases base; ataque vs defensa pide ~7 en 2d6 */
+const STATS=[['hp','❤️','Vida'],['spd','👟','Movimiento'],['mhit','👊','% ataque cerca'],['mdmg','💥','Daño cerca'],['rhit','🏹','% ataque lejos'],['range','📏','Distancia lejos'],['rdmg','🎯','Daño lejos']];
+const PCT=new Set(['mhit','rhit']), STAT_MIN={hp:1,spd:1,mhit:5,mdmg:1,rhit:0,range:0,rdmg:0};
+const ACTIONS=3, PARTY_MAX=3, CARRY_MAX=6;
+/* Clases base: el % es la chance de acertar con un dado de 100 */
 const CLASSES={
-  soldado:{name:'Soldado',hp:3,spd:3,atk:6,def:11,dmg:1,range:0},
-  tirador:{name:'Tirador',hp:2,spd:3,atk:6,def:10,dmg:1,range:3},
-  volador:{name:'Volador',hp:2,spd:4,atk:5,def:11,dmg:1,range:2,fly:true}
+  soldado:{name:'Soldado',hp:3,spd:3,mhit:80,mdmg:1,rhit:0,range:0,rdmg:0},
+  tirador:{name:'Tirador',hp:2,spd:3,mhit:60,mdmg:1,rhit:75,range:3,rdmg:1},
+  volador:{name:'Volador',hp:2,spd:4,mhit:70,mdmg:1,rhit:65,range:2,rdmg:1,fly:true}
 };
-/* Colección: cada personaje es una clase con una variación chica */
+/* Colección: cada personaje es una clase con una variación chica. look = cómo se dibuja su retrato */
 const HEROES=[
-  {id:'bruno',name:'Bruno',cls:'soldado',color:'#0f9b8e',mod:{}},
-  {id:'lia',name:'Lía',cls:'tirador',color:'#e0261b',mod:{}},
-  {id:'pico',name:'Pico',cls:'volador',color:'#0a6fca',mod:{}},
-  {id:'toro',name:'Toro',cls:'soldado',color:'#2d7a3a',mod:{hp:1,spd:-1}},
-  {id:'muro',name:'Muro',cls:'soldado',color:'#6f6f78',mod:{def:1,atk:-1}},
-  {id:'ojo',name:'Ojo',cls:'tirador',color:'#d9822b',mod:{range:1,def:-1}},
-  {id:'aguja',name:'Aguja',cls:'tirador',color:'#c2367a',mod:{dmg:1,hp:-1}},
-  {id:'rayo',name:'Rayo',cls:'volador',color:'#6b5bd6',mod:{spd:1,def:-1}},
-  {id:'zarpa',name:'Zarpa',cls:'volador',color:'#8a5a2b',mod:{atk:1,range:-1}}
+  {id:'bruno',name:'Bruno',cls:'soldado',color:'#0f9b8e',mod:{},look:{skin:'#e0ac69',hair:'#3b2a1a',weapon:'sword'}},
+  {id:'lia',name:'Lía',cls:'tirador',color:'#e0261b',mod:{},look:{skin:'#ffdbac',hair:'#a0522d',long:true}},
+  {id:'pico',name:'Pico',cls:'volador',color:'#0a6fca',mod:{},look:{skin:'#f1c27d',hair:'#e2c16b'}},
+  {id:'toro',name:'Toro',cls:'soldado',color:'#2d7a3a',mod:{hp:1,spd:-1},look:{skin:'#c68642',hair:'#2a1d14',pants:'#5a3e2b',weapon:'axe',horns:true}},
+  {id:'muro',name:'Muro',cls:'soldado',color:'#6f6f78',mod:{mdmg:1,mhit:-10},look:{skin:'#f1c27d',hair:'#8a6a3a',weapon:'sword',shield:true}},
+  {id:'ojo',name:'Ojo',cls:'tirador',color:'#d9822b',mod:{range:1,rhit:-10},look:{skin:'#c68642',hair:'#222222',hood:true}},
+  {id:'aguja',name:'Aguja',cls:'tirador',color:'#c2367a',mod:{rdmg:1,hp:-1},look:{skin:'#8d5524',hair:'#111111',hood:true,mask:true}},
+  {id:'rayo',name:'Rayo',cls:'volador',color:'#6b5bd6',mod:{spd:1,mhit:-10},look:{skin:'#e0ac69',hair:'#222222',tips:true}},
+  {id:'zarpa',name:'Zarpa',cls:'volador',color:'#8a5a2b',mod:{mhit:10,range:-1},look:{skin:'#8d5524',hair:'#4a3020',wing:'#a7a39a',claws:true,long:true}}
 ];
 const START_OWNED=['bruno','lia','pico','toro'], START_PARTY=['bruno','lia','pico'];
 /* Mapas de combate: # vacío · . pasto · 1/2 salida de cada bando · T árbol · H casa · W pozo (tapan vista) · o arbusto · p calabaza · ~ agua (solo frenan) */
@@ -258,7 +278,7 @@ const MAPS=[
 ];
 /* Mundo en coordenadas del viewBox 900x830 */
 const WORLD={
-  w:900,h:830,castle:{x:169,y:345,r:48},start:{x:169,y:400},
+  w:900,h:830,castle:{x:169,y:345,r:70},start:{x:169,y:400},
   rocks:[{x:453,y:295,r:32},{x:700,y:567,r:42},{x:357,y:712,r:38}],
   forests:[
     {x:668,y:205,r:92,trees:[[612,163,18],[690,135,22],[733,180,22],[602,228,17],[662,205,40],[675,262,26]]},
@@ -276,21 +296,30 @@ const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(M
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 const hero=id=>HEROES.find(h=>h.id===id);
-function heroStats(h){const c=CLASSES[h.cls],s={};for(const [k] of STATS)s[k]=Math.max(k==='range'?0:1,c[k]+(h.mod[k]||0));s.fly=!!c.fly;return s;}
+function heroStats(h){
+  const c=CLASSES[h.cls],s={};for(const [k] of STATS)s[k]=Math.max(STAT_MIN[k],c[k]+(h.mod[k]||0));
+  s.mhit=Math.min(95,s.mhit);s.rhit=Math.min(95,s.rhit);if(!s.range){s.rhit=0;s.rdmg=0;}s.fly=!!c.fly;return s;
+}
+/* Valor para mostrar: porcentajes con %, y los de tiro con — si no dispara */
+function statVal(s,k){if(!s.range&&(k==='rhit'||k==='range'||k==='rdmg'))return '—';return PCT.has(k)?s[k]+'%':s[k];}
 
 /* ---- Progreso guardado: colección, equipo activo y posición ---- */
-function freshSave(){const owned={};START_OWNED.forEach(id=>owned[id]={hp:heroStats(hero(id)).hp});return {owned,party:START_PARTY.slice(),pos:{...WORLD.start}};}
+function freshSave(){const owned={};START_OWNED.forEach(id=>owned[id]={hp:heroStats(hero(id)).hp});return {owned,party:START_PARTY.slice(),carry:START_OWNED.slice(),streak:0,pos:{...WORLD.start}};}
 function loadSave(){
   try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));
     if(s&&s.owned&&Array.isArray(s.party)&&s.pos){
       for(const id of Object.keys(s.owned))if(!hero(id))delete s.owned[id];
       s.party=s.party.filter(id=>s.owned[id]).slice(0,PARTY_MAX);
+      /* Partidas viejas no tenían "llevados": se arma con el equipo y la banca hasta 6 */
+      const carry=Array.isArray(s.carry)?s.carry:Object.keys(s.owned);
+      s.carry=[...new Set([...s.party,...carry.filter(id=>s.owned[id])])].slice(0,CARRY_MAX);
+      s.streak=s.streak|0;
       if(s.party.length)return s;}}catch(e){}
   return freshSave();
 }
 let P=loadSave();
 let W=freshWorld();
-function freshWorld(){return {p:{...P.pos},target:null,trail:[],groups:[],grace:0,inCastle:true,respawn:0,log:[],gid:1,battleGroup:null};}
+function freshWorld(){return {p:{...P.pos},target:null,trail:[],groups:[],grace:0,inCastle:dist(P.pos,WORLD.castle)<WORLD.castle.r,respawn:0,log:[],gid:1,battleGroup:null};}
 function persist(){P.pos={x:Math.round(W.p.x),y:Math.round(W.p.y)};try{localStorage.setItem(SAVE_KEY,JSON.stringify(P));}catch(e){}}
 let screen='world';
 
@@ -346,7 +375,7 @@ function step(dt){
     if(moveToward(W.p,W.target,sp))W.target=null;collide(W.p);
     if(W.target&&Math.hypot(W.p.x-ox,W.p.y-oy)<sp*.2)W.target=null; /* trabado contra una roca */
     const lt=W.trail[W.trail.length-1];if(!lt||dist(lt,W.p)>14){W.trail.push({x:W.p.x,y:W.p.y});if(W.trail.length>36)W.trail.shift();}}
-  const inC=dist(W.p,WORLD.castle)<WORLD.castle.r;if(inC&&!W.inCastle)restAtCastle();W.inCastle=inC;
+  const inC=dist(W.p,WORLD.castle)<WORLD.castle.r;if(inC!==W.inCastle){W.inCastle=inC;if(inC)restAtCastle();renderWorldPanel();}
   const safe=dist(W.p,WORLD.castle)<95;
   for(const g of W.groups){
     g.chasing=!W.grace&&!safe&&dist(g,W.p)<170;
@@ -376,31 +405,100 @@ $('world-svg').addEventListener('pointerdown',e=>{
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&screen==='world')persist();});
 
-function modText(h){return Object.entries(h.mod).map(([k,v])=>`${v>0?'+':'−'}${Math.abs(v)}${STATS.find(s=>s[0]===k)[1]}`).join(' ');}
-function heroCard(id,inParty){
-  const h=hero(id),s=heroStats(h),hp=P.owned[id].hp,mt=modText(h);
-  const btn=inParty?`<button class="btn" data-out="${id}" ${P.party.length<=1?'disabled title="Hace falta al menos uno"':''}>Sacar</button>`
-    :`<button class="btn" data-in="${id}" ${P.party.length>=PARTY_MAX?'disabled title="El equipo ya tiene 3"':''}>Meter</button>`;
-  return `<div class="hero"><span class="dot" style="--c:${h.color}"></span>
+function modText(h){return Object.entries(h.mod).map(([k,v])=>`${v>0?'+':'−'}${Math.abs(v)}${PCT.has(k)?'%':''}${STATS.find(s=>s[0]===k)[1]}`).join(' ');}
+const reserve=()=>P.carry.filter(id=>!P.party.includes(id));
+const barracks=()=>Object.keys(P.owned).filter(id=>!P.carry.includes(id));
+function heroCard(id,where){
+  const h=hero(id),s=heroStats(h),hp=P.owned[id].hp,mt=modText(h),town=W.inCastle;
+  const btn=(act,label,off)=>`<button class="btn" data-${act}="${id}" ${off?'disabled':''}>${label}</button>`,b=[btn('view','Ver')];
+  if(where==='party')b.push(btn('out','A la reserva',P.party.length<=1));
+  if(where==='reserve')b.push(btn('in','Al equipo',P.party.length>=PARTY_MAX));
+  if(where!=='barracks'&&town)b.push(btn('drop','Dejar',where==='party'&&P.party.length<=1));
+  if(where==='barracks')b.push(btn('take','Llevar',P.carry.length>=CARRY_MAX));
+  return `<div class="hero"><button class="thumb" data-view="${id}" aria-label="Ver a ${h.name}">${spriteSVG(h,1.5)}</button>
     <div><b>${h.name}</b> <small>${CLASSES[h.cls].name}${s.fly?' 🕊️':''}${mt?' · '+mt:''}</small>
-    <div class="meta"><span class="${hp<s.hp?'hurt':''}">❤️${hp}/${s.hp}</span> 👟${s.spd} 👊${s.atk} 🛡️${s.def} 💥${s.dmg} ⚡${s.range}</div></div>${btn}</div>`;
+    <div class="meta"><span class="${hp<s.hp?'hurt':''}">❤️${hp}/${s.hp}</span> 👟${s.spd} · 👊${s.mhit}% 💥${s.mdmg} · ${s.range?`🏹${s.rhit}% 📏${s.range} 🎯${s.rdmg}`:'🏹 —'}</div></div>
+    <div class="btns">${b.join('')}</div></div>`;
 }
 function renderWorldPanel(){
-  const slots=[];for(let i=0;i<PARTY_MAX;i++)slots.push(P.party[i]?heroCard(P.party[i],true):'<div class="slot-empty">Lugar libre</div>');
+  const slots=[];for(let i=0;i<PARTY_MAX;i++)slots.push(P.party[i]?heroCard(P.party[i],'party'):'<div class="slot-empty">Lugar libre</div>');
   $('party').innerHTML=slots.join('');$('party-count').textContent=`${P.party.length}/${PARTY_MAX}`;
-  const bench=Object.keys(P.owned).filter(id=>!P.party.includes(id));
-  $('bench').innerHTML=bench.map(id=>heroCard(id,false)).join('')||'<p class="hint">Todos tus personajes están en el equipo.</p>';
-  $('coll-count').textContent=`colección ${Object.keys(P.owned).length}/${HEROES.length}`;
+  $('streak').textContent=`🔥 Invictos: ${P.streak}`;
+  $('bench').innerHTML=reserve().map(id=>heroCard(id,'reserve')).join('')||'<p class="hint">Nadie en la reserva.</p>';
+  $('res-count').textContent=`viajan ${P.carry.length}/${CARRY_MAX}`;
+  const bk=barracks();$('coll-count').textContent=`colección ${Object.keys(P.owned).length}/${HEROES.length}`;
+  $('barracks').innerHTML=W.inCastle
+    ?(bk.map(id=>heroCard(id,'barracks')).join('')||'<p class="hint">No queda nadie en el castillo: viajan todos.</p>')
+    :`<p class="hint">🏰 ${bk.length?`${bk.length} te ${bk.length>1?'esperan':'espera'}`:'Nadie te espera'} en el castillo. Pasá por ahí para cambiar quién viaja.</p>`;
   $('wlog').innerHTML=W.log.map(l=>`<li>${l}</li>`).join('');
   renderPartyGlyph();
 }
 $('world-panel').addEventListener('click',e=>{
-  const b=e.target.closest('button[data-in],button[data-out]');if(!b||b.disabled)return;
-  if(b.dataset.in&&P.party.length<PARTY_MAX)P.party.push(b.dataset.in);
-  if(b.dataset.out&&P.party.length>1)P.party=P.party.filter(id=>id!==b.dataset.out);
+  const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;
+  if(d.view){openHero(d.view);return;}
+  if(d.in&&P.party.length<PARTY_MAX)P.party.push(d.in);
+  else if(d.out&&P.party.length>1)P.party=P.party.filter(id=>id!==d.out);
+  else if(d.drop&&W.inCastle&&!(P.party.includes(d.drop)&&P.party.length<=1)){P.party=P.party.filter(id=>id!==d.drop);P.carry=P.carry.filter(id=>id!==d.drop);}
+  else if(d.take&&W.inCastle&&P.carry.length<CARRY_MAX){P.carry.push(d.take);if(P.party.length<PARTY_MAX)P.party.push(d.take);}
+  else return;
   persist();renderWorldPanel();
 });
 $('btn-reset').onclick=()=>{if(!confirm('¿Borrar la colección y empezar de cero?'))return;P=freshSave();W=freshWorld();for(let i=0;i<4;i++)spawnGroup();persist();wlog('Arranca una nueva aventura.');renderWorldPanel();};
+
+/* ---- Retratos: pixel art armado con rectángulos y contorno automático; caras sin rasgos a propósito ---- */
+const SPR_W=20,SPR_H=26,spriteCache={};
+function shade(hex,f){const n=parseInt(hex.slice(1),16);return '#'+[n>>16,n>>8&255,n&255].map(v=>Math.max(0,Math.min(255,Math.round(v*f))).toString(16).padStart(2,'0')).join('');}
+function spritePixels(h){
+  const px=Array.from({length:SPR_H},()=>Array(SPR_W).fill(null));
+  const r=(x,y,w,hh,c)=>{for(let j=y;j<y+hh;j++)for(let i=x;i<x+w;i++)if(j>=0&&j<SPR_H&&i>=0&&i<SPR_W)px[j][i]=c;};
+  const L=h.look,cl=h.color,cd=shade(cl,.7),sk=L.skin,sd=shade(sk,.82),hr=L.hair;
+  const MET='#c9cfd6',MED='#7f8893',WOOD='#8a5a2b',LEA='#6b4a2e',BONE='#efe6cf',GOLD='#e6b422',BOOT='#3a2c22',PANT=L.pants||'#45454f';
+  /* Lo que va detrás del cuerpo */
+  if(h.cls==='volador'){const wc=L.wing||'#f2efe6',wd=shade(wc,.82);
+    [[8,3],[9,1],[10,0],[11,0],[12,0],[13,1],[14,2],[15,3]].forEach(([y,x0])=>{r(x0,y,6-x0,1,y%2?wd:wc);r(14,y,6-x0,1,y%2?wd:wc);});
+    if(L.tips){r(0,10,1,3,GOLD);r(19,10,1,3,GOLD);}}
+  if(h.cls==='tirador'){r(5,10,10,11,shade(cl,.5));r(14,6,2,6,LEA);r(14,5,1,1,MET);r(15,4,1,1,MET);}
+  /* Cuerpo */
+  r(7,19,2,4,PANT);r(11,19,2,4,PANT);r(9,19,2,1,PANT);r(6,23,3,2,BOOT);r(11,23,3,2,BOOT);
+  r(6,10,8,9,cl);r(12,10,2,9,cd);r(6,17,8,1,LEA);r(9,17,2,1,GOLD);
+  r(4,11,2,7,cl);r(14,11,2,7,cd);r(4,18,2,1,sk);r(14,18,2,1,sd);
+  r(8,9,4,1,sd);r(7,3,6,6,sk);r(11,3,2,6,sd);
+  r(7,2,6,2,hr);r(6,3,1,3,hr);r(13,3,1,3,hr);if(L.long){r(6,3,1,9,hr);r(13,3,1,9,hr);}
+  /* Lo propio de cada clase y personaje */
+  if(h.cls==='soldado'){
+    r(7,1,6,1,MET);r(6,2,8,2,MET);r(6,4,1,3,MED);r(13,4,1,3,MED);r(3,10,4,2,MET);r(13,10,4,2,MED);
+    if(L.horns){r(5,0,1,2,BONE);r(4,0,1,1,BONE);r(14,0,1,2,BONE);r(15,0,1,1,BONE);}
+    if(L.weapon==='axe'){r(16,6,1,14,WOOD);r(17,5,2,5,MET);r(19,6,1,3,MED);}
+    else{r(16,6,1,11,MET);r(15,17,3,1,GOLD);r(16,18,1,2,WOOD);}
+    if(L.shield){r(1,11,5,8,MED);r(2,12,3,6,cl);r(3,13,1,4,GOLD);}
+  }
+  if(h.cls==='tirador'){
+    if(L.hood){const hd=shade(cl,.45);r(6,1,8,3,hd);r(6,4,1,6,hd);r(13,4,1,6,hd);}
+    if(L.mask)r(7,7,6,2,'#2f2f36');
+    r(3,15,13,1,WOOD);r(15,12,1,7,shade(WOOD,.75));r(2,15,1,1,MET);
+  }
+  if(h.cls==='volador'){r(7,4,6,1,cl);if(L.claws){r(3,19,1,1,BONE);r(5,19,1,1,BONE);r(14,19,1,1,BONE);r(16,19,1,1,BONE);}}
+  /* Contorno: todo hueco pegado a algo dibujado se pinta oscuro */
+  const out=px.map(row=>row.slice());
+  for(let y=0;y<SPR_H;y++)for(let x=0;x<SPR_W;x++)if(!px[y][x]&&DIRS.some(([dx,dy])=>px[y+dy]&&px[y+dy][x+dx]))out[y][x]='#231c1c';
+  return out;
+}
+function spriteSVG(h,scale){
+  if(!spriteCache[h.id]){const px=spritePixels(h);let rects='';
+    for(let y=0;y<SPR_H;y++){let x=0;while(x<SPR_W){const c=px[y][x];if(!c){x++;continue;}let e=x;while(e+1<SPR_W&&px[y][e+1]===c)e++;
+      rects+=`<rect x="${x}" y="${y}" width="${e-x+1}" height="1" fill="${c}"/>`;x=e+1;}}
+    spriteCache[h.id]=rects;}
+  return `<svg class="pix" viewBox="0 0 ${SPR_W} ${SPR_H}" width="${SPR_W*scale}" height="${SPR_H*scale}" shape-rendering="crispEdges" aria-hidden="true">${spriteCache[h.id]}</svg>`;
+}
+function openHero(id){
+  const h=hero(id),s=heroStats(h),mt=modText(h),o=P.owned[id];
+  $('dlg-body').innerHTML=`<div class="portrait">${spriteSVG(h,7)}</div>
+    <div class="stack" style="gap:8px"><div><h2 class="sub">${h.name}</h2><small class="muted">${CLASSES[h.cls].name}${s.fly?' · 🕊️ vuela':''}${mt?' · '+mt:''}</small></div>
+    <div class="statlist">${STATS.map(([k,ic,l])=>`<div><span>${ic} ${l}</span><b>${k==='hp'&&o?`${o.hp}/${s.hp}`:statVal(s,k)}</b></div>`).join('')}</div>
+    <p class="hint">Habilidades: próximamente.</p></div>`;
+  $('dlg-hero').showModal();
+}
+$('dlg-hero').addEventListener('click',e=>{if(e.target===$('dlg-hero'))$('dlg-hero').close();});
 function showScreen(){
   const w=screen==='world';$('world-view').hidden=!w;$('world-panel').hidden=!w;$('battle-view').hidden=w;$('battle-panel').hidden=w;
   $('subtitle').textContent=w?'Recorré el mapa con tu equipo. Si te cruzás una patrulla, se pelea.':'Escaramuza: 3 acciones por turno, cada ficha hace una sola cosa.';
@@ -454,7 +552,7 @@ function startBattle(g){
   g.members.forEach((id,i)=>{if(s2[i])G.units.push(makeUnit(hero(id),2,s2[i][0],s2[i][1]));});
   G.actions=Math.min(ACTIONS,G.units.filter(u=>u.team===1).length);
   log(`⚔️ ¡Choque en ${map.name}! Arranca tu equipo.`);
-  $('rollinfo').innerHTML='<span class="hint">Los dados aparecen al atacar.</span>';
+  $('rollinfo').innerHTML='<span class="hint">El dado de 100 aparece al atacar.</span>';
   showScreen();render();window.scrollTo({top:0,behavior:'smooth'});
 }
 /* Pasa la vida del combate a la colección; quien cayó vuelve con 1 */
@@ -464,12 +562,15 @@ function resolveBattle(w){
   if(w===1){
     syncPartyHp();W.groups=W.groups.filter(x=>x!==g);
     const cand=g.members.filter(id=>!P.owned[id]);
-    if(cand.length){const id=pick(cand);P.owned[id]={hp:heroStats(hero(id)).hp};G.recruit=id;log(`🤝 ${hero(id).name} se suma a tu colección.`);}
-    wlog(`⚔️ Victoria en ${G.map.name}.${G.recruit?` ${hero(G.recruit).name} se unió.`:''}`);
+    if(cand.length){const id=pick(cand);P.owned[id]={hp:heroStats(hero(id)).hp};G.recruit=id;
+      G.recruitTravels=P.carry.length<CARRY_MAX;if(G.recruitTravels)P.carry.push(id);
+      log(`🤝 ${hero(id).name} se suma ${G.recruitTravels?'a tu reserva':'y te espera en el castillo'}.`);}
+    P.streak++;
+    wlog(`⚔️ Victoria en ${G.map.name} (🔥 ${P.streak} invicto${P.streak>1?'s':''}).${G.recruit?` ${hero(G.recruit).name} se unió.`:''}`);
   }else{
     for(const id in P.owned)P.owned[id].hp=heroStats(hero(id)).hp;
-    W.p={...WORLD.start};W.trail=[];W.inCastle=true;
-    wlog('💀 Derrota. El equipo vuelve al castillo y se recupera.');
+    W.p={...WORLD.start};W.trail=[];W.inCastle=true;P.streak=0;
+    wlog('💀 Derrota. El equipo vuelve al castillo y se recupera. Los invictos vuelven a 0.');
   }
   W.grace=2.5;persist();
 }
@@ -544,7 +645,7 @@ async function aiTurn(){
     const mine=G.units.filter(u=>u.team===2&&!u.acted);if(!mine.length)break;
     let best=null;
     for(const u of mine)for(const k of ['range','close'])for(const t of targets(u,k)){
-      const sc=10-t.hp+(t.hp<=u.dmg?5:0)-(k==='range'?lineCover(u,t)*2:0);if(!best||sc>best.sc)best={u,t,k,sc};}
+      const pct=k==='close'?u.mhit:Math.max(5,u.rhit-lineCover(u,t)*10),dm=k==='close'?u.mdmg:u.rdmg,sc=pct/10*dm-t.hp+(t.hp<=dm?5:0);if(!best||sc>best.sc)best={u,t,k,sc};}
     if(best){G.sel=best.u.id;G.busy=false;await attack(best.u,best.t,best.k);continue;}
     let mv=null;
     for(const u of mine){const cur=aiScore(u,u.x,u.y);
@@ -556,25 +657,21 @@ async function aiTurn(){
   battle.ai=false;battle.busy=false;if(G===battle)render();
 }
 
-const PIPS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
-function drawDie(el,n){el.innerHTML=PIPS[n].map(p=>`<span style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></span>`).join('');}
-const d6=()=>1+Math.floor(Math.random()*6);
+const d100=()=>1+Math.floor(Math.random()*100);
 function rollAnim(){
-  return new Promise(res=>{const a=$('d1'),b=$('d2');a.classList.add('rolling');b.classList.add('rolling');let i=0;
-    const steps=matchMedia('(prefers-reduced-motion: reduce)').matches?1:9;
-    const t=setInterval(()=>{drawDie(a,d6());drawDie(b,d6());if(++i>=steps){clearInterval(t);const r=[d6(),d6()];drawDie(a,r[0]);drawDie(b,r[1]);a.classList.remove('rolling');b.classList.remove('rolling');res(r);}},70);});
+  return new Promise(res=>{const el=$('d100');el.classList.add('rolling');let i=0;
+    const steps=matchMedia('(prefers-reduced-motion: reduce)').matches?1:10;
+    const t=setInterval(()=>{el.textContent=d100();if(++i>=steps){clearInterval(t);const r=d100();el.textContent=r;el.classList.remove('rolling');res(r);}},60);});
 }
 
 async function attack(att,def,kind){
   G.busy=true;G.mode=null;render();
-  const [a,b]=await rollAnim();const cover=kind==='range'?lineCover(att,def):0,sum=a+b,av=stat(att,'atk')-cover,dv=stat(def,'def');
-  let hit,crit=false,fumble=false;
-  if(a===1&&b===1){hit=false;fumble=true;}else if(a===6&&b===6){hit=true;crit=true;}else hit=av+sum>=dv;
-  const dmg=hit?stat(att,'dmg')+(crit?1:0):0;
-  const label=fumble?'¡PIFIA!':crit?'¡CRÍTICO!':hit?'¡IMPACTO!':'FALLÓ';
-  $('rollinfo').innerHTML=`<span class="res ${hit?'hit':'miss'}">${label}</span>👊${av}${cover?` <small>(−${cover} cubierta)</small>`:''} + 🎲${sum} = <b>${av+sum}</b> vs 🛡️${dv}${hit?` · 💥${dmg}`:''}`;
+  const close=kind==='close',cover=close?0:lineCover(att,def),pct=close?att.mhit:Math.max(5,att.rhit-cover*10);
+  const roll=await rollAnim(),crit=roll<=5,hit=roll<=pct,dmg=hit?(close?att.mdmg:att.rdmg)+(crit?1:0):0;
+  const label=crit?'¡CRÍTICO!':hit?'¡IMPACTO!':'FALLÓ';
+  $('rollinfo').innerHTML=`<span class="res ${hit?'hit':'miss'}">${label}</span>🎲${roll} vs ${close?'👊':'🏹'}${pct}%${cover?` <small>(−${cover*10}% cubierta)</small>`:''}${hit?` · 💥${dmg}`:''}`;
   const who=u=>`${u.name}${u.team===2?' (rival)':''}`;
-  log(`${who(att)} ataca ${kind==='close'?'de cerca':'a distancia'} a ${who(def)}: ${av}+${sum}=${av+sum} vs ${dv} → ${label}${hit?` −${dmg} ❤️`:''}`);
+  log(`${who(att)} ataca ${close?'de cerca':'a distancia'} a ${who(def)}: 🎲${roll} vs ${pct}% → ${label}${hit?` −${dmg} ❤️`:''}`);
   if(hit){def.hp=Math.max(0,def.hp-dmg);if(def.hp<=0){G.units=G.units.filter(u=>u!==def);log(`💀 ${who(def)} queda KO.`);}}
   checkWinner();G.busy=false;spend(att);render();
 }
@@ -588,7 +685,7 @@ function onCell(x,y){
 
 function statsHTML(u){
   const hearts=Array.from({length:u.maxhp},(_,i)=>`<span class="${i<u.hp?'':'lost'}">❤️</span>`).join('');
-  return `<div class="hearts" title="Vida ${u.hp} de ${u.maxhp}">${hearts}</div><div class="stats">${STATS.slice(1).map(([k,ic,l])=>`<div title="${l}"><small>${ic}</small>${u[k]}</div>`).join('')}</div>`;
+  return `<div class="hearts" title="Vida ${u.hp} de ${u.maxhp}">${hearts}</div><div class="stats">${STATS.slice(1).map(([k,ic,l])=>`<div title="${l}"><small>${ic}</small>${statVal(u,k)}</div>`).join('')}</div>`;
 }
 
 function render(){
@@ -612,7 +709,7 @@ function render(){
   if(G.winner)bn.innerHTML=`<span class="win"${G.winner===2?' style="color:var(--red)"':''}>${G.winner===1?'🏆 ¡Ganaron!':'💀 Derrota'}</span>`;
   else if(G.turn===2)bn.innerHTML=`<span class="pill j2">Rival</span> El rival está pensando…`;
   else if(G.mode==='move')bn.innerHTML=`<span class="pill j1">Vos</span> ${mv.size?'Elegí una casilla marcada para moverte.':'No hay lugar para moverse.'}`;
-  else if(G.mode)bn.innerHTML=`<span class="pill j1">Vos</span> ${tg.length?'Tocá un enemigo marcado en rojo.'+(G.mode==='range'?' Cada ficha, 🌿 o 🎃 en el medio resta 1.':''):'No hay enemigos a tiro.'}`;
+  else if(G.mode)bn.innerHTML=`<span class="pill j1">Vos</span> ${tg.length?'Tocá un enemigo marcado en rojo.'+(G.mode==='range'?' Cada ficha, 🌿 o 🎃 en el medio resta 10%.':''):'No hay enemigos a tiro.'}`;
   else bn.innerHTML=`<span class="pill j1">Vos</span> Tu turno: tocá una de tus fichas.`;
 
   $('turnlabel').innerHTML=`<span class="pill j${G.turn}">${teamName(G.turn)}</span>`;
@@ -625,7 +722,7 @@ function render(){
   if(G.winner){
     const r=G.recruit?hero(G.recruit):null;
     up.innerHTML=`<div class="result">${G.winner===1
-      ?`<p class="hint">La patrulla quedó fuera de combate. Quien cayó vuelve al mapa con 1 ❤️.</p>${r?`<div class="unit-head"><span class="dot" style="--c:${r.color}"></span><div><b>🤝 ${r.name} se suma</b><br><small>${CLASSES[r.cls].name}${modText(r)?' · '+modText(r):''} · lo encontrás en la banca</small></div></div>`:''}`
+      ?`<p class="hint">La patrulla quedó fuera de combate. Quien cayó vuelve al mapa con 1 ❤️.</p>${r?`<div class="unit-head"><span class="dot" style="--c:${r.color}"></span><div><b>🤝 ${r.name} se suma</b><br><small>${CLASSES[r.cls].name}${modText(r)?' · '+modText(r):''} · ${G.recruitTravels?'ya viaja en tu reserva':'te espera en el castillo (llevás 6)'}</small></div></div>`:''}`
       :'<p class="hint">El equipo vuelve al castillo con la vida llena.</p>'}
       <button class="btn red" id="btn-back">Volver al mapa</button></div>`;
     $('btn-back').onclick=backToWorld;
@@ -637,8 +734,8 @@ function render(){
     ${statsHTML(s)}
     ${s.team===1?`<div class="actions">
       <button class="btn${G.mode==='move'?' on':''}" data-act="move" ${ok?'':'disabled'}>👟 Mover (${stat(s,'spd')})</button>
-      <button class="btn${G.mode==='close'?' on':''}" data-act="close" ${ok?'':'disabled'}>👊 De cerca</button>
-      <button class="btn${G.mode==='range'?' on':''}" data-act="range" ${ok&&s.range>0?'':'disabled'}>⚡ A distancia (${s.range})</button>
+      <button class="btn${G.mode==='close'?' on':''}" data-act="close" ${ok?'':'disabled'}>👊 De cerca (${s.mhit}%)</button>
+      <button class="btn${G.mode==='range'?' on':''}" data-act="range" ${ok&&s.range>0?'':'disabled'}>🏹 Lejos (${s.range?s.rhit+'% · 📏'+s.range:'—'})</button>
     </div>`:''}`;
     up.querySelectorAll('[data-act]').forEach(bt=>bt.onclick=()=>{const a=bt.dataset.act;G.mode=G.mode===a?null:a;render();});
   }
@@ -650,7 +747,6 @@ $('board').addEventListener('click',e=>{const c=e.target.closest('button.cell');
 $('btn-end').onclick=()=>{if(!G.busy&&G.turn===1&&!G.winner){endTurn();render();}};
 $('btn-flee').onclick=flee;
 
-drawDie($('d1'),6);drawDie($('d2'),6);
 buildWorld();
 for(let i=0;i<4;i++)spawnGroup();
 wlog('Tu equipo sale del castillo. Tocá el mapa para moverte.');
