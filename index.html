@@ -101,44 +101,69 @@ header p{margin:0;color:var(--muted)}
 details{color:var(--muted);font-size:14px;line-height:1.5}
 details summary{cursor:pointer;color:var(--ink);font-weight:600}
 details ul{padding-left:18px;margin:6px 0}
-.tpl-list{display:flex;flex-direction:column;gap:6px}
-.tpl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 10px;align-items:center;background:var(--panel2);border-radius:5px;padding:8px 10px}
-.tpl .dot{width:18px;height:18px;border-radius:4px;background:var(--c)}
-.tpl .meta{font-size:13px;color:var(--muted)}
-.tpl .btns{grid-column:1/-1;display:flex;gap:5px;flex-wrap:wrap}
-.tpl .btns .btn{padding:4px 9px;font-size:13px}
-.editor{display:flex;flex-direction:column;gap:10px;border-top:1px solid #555;padding-top:12px}
-.editor h2{font-family:var(--f-display);font-weight:400;letter-spacing:.04em;margin:0;font-size:1.4rem}
-.fields{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.fields label{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--muted)}
-.fields input{background:var(--panel2);border:1px solid #5d5d64;border-radius:4px;padding:6px;width:100%}
-.fields input[type=color]{padding:2px;height:34px}
 .win{font-family:var(--f-display);font-size:1.8rem;letter-spacing:.04em;color:var(--good)}
+/* Mundo: hoja de papel con dibujos a mano, el equipo se mueve tocando el mapa */
+.paper{background:#f4f1e8;border-radius:8px;overflow:hidden;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+#world-svg{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation;user-select:none}
+.ink{fill:none;stroke:#2a2a2a;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.ink.soft{stroke:#9a978c;stroke-width:1.8}
+.trail{fill:none;stroke:#2a2a2a;stroke-width:3;stroke-linecap:round;stroke-dasharray:1 13}
+.aim{fill:none;stroke:#2a2a2a;stroke-width:1.6;stroke-dasharray:4 6;opacity:.45}
+.eg .bang{display:none;font-family:var(--f-display);font-size:22px;fill:#b3262d}
+.eg.chase .bang{display:block}
+h2.sub{font-family:var(--f-display);font-weight:400;letter-spacing:.04em;margin:0;font-size:1.4rem;display:flex;align-items:baseline;gap:8px}
+h2.sub small{font-family:var(--f-num);font-size:1rem;color:var(--muted);letter-spacing:.04em}
+.roster{display:flex;flex-direction:column;gap:6px}
+.hero{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;background:var(--panel2);border-radius:5px;padding:8px 10px}
+.hero .dot{width:18px;height:18px;border-radius:4px;background:var(--c)}
+.hero small{color:var(--muted)}
+.hero .meta{font-size:13px;color:var(--muted)}
+.hero .hurt{color:var(--red)}
+.hero .btn{padding:4px 10px;font-size:13px}
+.slot-empty{border:1px dashed #666;border-radius:5px;padding:10px;text-align:center;color:var(--muted);font-size:13px}
+#wlog{list-style:none;margin:0;padding:8px 0 0;max-height:130px;overflow-y:auto;font-size:13.5px;display:flex;flex-direction:column;gap:3px;border-top:1px solid #555}
+#wlog li{color:var(--muted)} #wlog li:first-child{color:var(--ink)}
+.result{display:flex;flex-direction:column;gap:10px}
 </style>
 
 <header>
   <h1>Isletas</h1>
-  <p>Escaramuzas chiquitas: 3 acciones por turno, cada ficha hace una sola cosa.</p>
+  <p id="subtitle">Recorré el mapa con tu equipo. Si te cruzás una patrulla, se pelea.</p>
 </header>
 
 <main class="layout">
-  <section>
-    <div class="banner" id="banner"></div>
-    <div class="sky"><div id="board" class="board" role="grid" aria-label="Mapa"></div></div>
+  <section id="world-view">
+    <div class="paper"><svg id="world-svg" viewBox="0 0 900 830" role="img" aria-label="Mapa del mundo: tocá para mover a tu equipo"></svg></div>
     <div class="legend">
-      <span><i style="background:var(--p1)"></i>Jugador 1</span>
-      <span><i style="background:var(--p2)"></i>Jugador 2</span>
+      <span>⚫ Tu equipo</span>
+      <span>⊗ Patrulla rival (<b style="color:#e3363e">!</b> = te persigue)</span>
+      <span>🏰 Castillo: zona segura, recupera vida</span>
+      <span>🌲 Bosque: más lento</span>
+    </div>
+  </section>
+
+  <section id="battle-view" hidden>
+    <div class="banner" id="banner"></div>
+    <div class="sky"><div id="board" class="board" role="grid" aria-label="Mapa de combate"></div></div>
+    <div class="legend">
+      <span><i style="background:var(--p1)"></i>Tu equipo</span>
+      <span><i style="background:var(--p2)"></i>Rival</span>
       <span>🌲🏠⛲ tapan la vista · 🎃🌿💧 solo frenan el paso</span>
     </div>
   </section>
 
   <aside class="side">
-    <div class="tabs">
-      <button id="tab-btn-play" class="on" data-tab="play">Partida</button>
-      <button id="tab-btn-pieces" data-tab="pieces">Fichas</button>
+    <div id="world-panel" class="stack">
+      <h2 class="sub">Equipo activo <small id="party-count"></small></h2>
+      <div class="roster" id="party"></div>
+      <h2 class="sub">Banca <small id="coll-count"></small></h2>
+      <div class="roster" id="bench"></div>
+      <p class="hint">Tocá el mapa para moverte. Las patrullas te persiguen si te acercás; en el castillo no entran. Al ganar, uno de los rivales que no tengas se suma a tu colección.</p>
+      <ol id="wlog"></ol>
+      <div class="cfg"><button class="btn ml" id="btn-reset">Borrar progreso</button></div>
     </div>
 
-    <div id="tab-play" class="stack">
+    <div id="battle-panel" class="stack" hidden>
       <div class="turnbox">
         <span id="turnlabel"></span><span class="pips" id="pips"></span>
         <button class="btn ml" id="btn-end">Terminar turno</button>
@@ -149,11 +174,7 @@ details ul{padding-left:18px;margin:6px 0}
         <div id="rollinfo"><span class="hint">Los dados aparecen al atacar.</span></div>
       </div>
       <ol id="log"></ol>
-      <div class="cfg">
-        <label for="cfg-map">Mapa</label>
-        <select id="cfg-map"></select>
-        <button class="btn red ml" id="btn-new">Nueva partida</button>
-      </div>
+      <div class="cfg"><button class="btn ml" id="btn-flee">🏃 Huir</button></div>
       <details>
         <summary>Reglas rápidas</summary>
         <ul>
@@ -163,30 +184,36 @@ details ul{padding-left:18px;margin:6px 0}
           <li><b>A distancia:</b> a ⚡ casillas o menos (contando en cruz), con vista libre. Árboles, casas, pozos y fichas tapan la vista.</li>
           <li><b>Ataque:</b> 👊 + 2d6 ≥ 🛡️ del rival = impacto. El rival pierde tantos ❤️ como tu 💥.</li>
           <li>Doble 6 = crítico (+1 daño). Doble 1 = pifia, falla siempre.</li>
-          <li>Las stats no cambian nunca. Con 0 ❤️ la ficha sale del mapa. Gana quien deje al otro sin fichas.</li>
+          <li>La vida perdida se mantiene al volver al mapa. Quien cae en una pelea ganada vuelve con 1 ❤️. Si perdés, el equipo vuelve al castillo.</li>
         </ul>
       </details>
-    </div>
-
-    <div id="tab-pieces" class="stack" hidden>
-      <p class="hint">Cada ficha tiene stats fijas y un poco de vida. Editalas, creá nuevas y ponelas en el mapa para cualquiera de los dos jugadores.</p>
-      <div class="tpl-list" id="tpl-list"></div>
-      <div class="cfg"><button class="btn" id="btn-newtpl">+ Nueva ficha</button><button class="btn ml" id="btn-resettpl">Restaurar las 3 originales</button></div>
-      <div class="editor" id="editor" hidden></div>
     </div>
   </aside>
 </main>
 
 <script>
 const STATS=[['hp','❤️','Vida'],['spd','👟','Movimiento'],['atk','👊','Ataque'],['def','🛡️','Defensa'],['dmg','💥','Daño'],['range','⚡','Rango']];
-const ACTIONS=3;
-/* Stats fijas toda la partida; ataque vs defensa pide ~7 en 2d6 */
-const DEFAULTS=[
-  {id:'t1',name:'Soldado',color:'#0f9b8e',hp:3,spd:3,atk:5,def:11,dmg:1,range:0},
-  {id:'t2',name:'Tirador',color:'#e0261b',hp:2,spd:3,atk:5,def:10,dmg:1,range:3},
-  {id:'t3',name:'Volador',color:'#0a6fca',hp:2,spd:4,atk:4,def:11,dmg:1,range:2}
+const ACTIONS=3, PARTY_MAX=3;
+/* Clases base; ataque vs defensa pide ~7 en 2d6 */
+const CLASSES={
+  soldado:{name:'Soldado',hp:3,spd:3,atk:5,def:11,dmg:1,range:0},
+  tirador:{name:'Tirador',hp:2,spd:3,atk:5,def:10,dmg:1,range:3},
+  volador:{name:'Volador',hp:2,spd:4,atk:4,def:11,dmg:1,range:2}
+};
+/* Colección: cada personaje es una clase con una variación chica */
+const HEROES=[
+  {id:'bruno',name:'Bruno',cls:'soldado',color:'#0f9b8e',mod:{}},
+  {id:'lia',name:'Lía',cls:'tirador',color:'#e0261b',mod:{}},
+  {id:'pico',name:'Pico',cls:'volador',color:'#0a6fca',mod:{}},
+  {id:'toro',name:'Toro',cls:'soldado',color:'#2d7a3a',mod:{hp:1,spd:-1}},
+  {id:'muro',name:'Muro',cls:'soldado',color:'#6f6f78',mod:{def:1,atk:-1}},
+  {id:'ojo',name:'Ojo',cls:'tirador',color:'#d9822b',mod:{range:1,def:-1}},
+  {id:'aguja',name:'Aguja',cls:'tirador',color:'#c2367a',mod:{dmg:1,hp:-1}},
+  {id:'rayo',name:'Rayo',cls:'volador',color:'#6b5bd6',mod:{spd:1,def:-1}},
+  {id:'zarpa',name:'Zarpa',cls:'volador',color:'#8a5a2b',mod:{atk:1,range:-1}}
 ];
-/* Mapas: # vacío · . pasto · 1/2 salida de cada jugador · T árbol · H casa · W pozo (tapan vista) · o arbusto · p calabaza · ~ agua (solo frenan) */
+const START_OWNED=['bruno','lia','pico','toro'], START_PARTY=['bruno','lia','pico'];
+/* Mapas de combate: # vacío · . pasto · 1/2 salida de cada bando · T árbol · H casa · W pozo (tapan vista) · o arbusto · p calabaza · ~ agua (solo frenan) */
 const MAPS=[
   {name:'Pradera',g1:'#8fcb5e',g2:'#82bf53',rows:[
     '#2#.2##',
@@ -229,42 +256,208 @@ const MAPS=[
     '#..1...#',
     '##.1.1##']}
 ];
+/* Mundo en coordenadas del viewBox 900x830 */
+const WORLD={
+  w:900,h:830,castle:{x:169,y:345,r:48},start:{x:169,y:400},
+  rocks:[{x:453,y:295,r:32},{x:700,y:567,r:42},{x:357,y:712,r:38}],
+  forests:[
+    {x:668,y:205,r:92,trees:[[612,163,18],[690,135,22],[733,180,22],[602,228,17],[662,205,40],[675,262,26]]},
+    {x:220,y:505,r:85,trees:[[185,472,22],[212,490,30],[178,545,28],[260,530,20],[305,458,16]]}
+  ],
+  spawns:[{x:560,y:430},{x:800,y:330},{x:520,y:620},{x:790,y:740},{x:420,y:120},{x:820,y:90},{x:140,y:720},{x:600,y:780}]
+};
 const OB={T:'🌲',H:'🏠',W:'⛲',o:'🌿',p:'🎃'};
 const BLOCK_VIEW=new Set(['T','H','W']);
-const KEY='isletas.templates.v1';
+const SAVE_KEY='isletas.save.v2';
 const clone=o=>JSON.parse(JSON.stringify(o));
-let templates=load();
-function load(){try{const s=localStorage.getItem(KEY);if(s){const t=JSON.parse(s);if(Array.isArray(t)&&t.length)return t;}}catch(e){}return clone(DEFAULTS);}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(templates));}catch(e){}}
-
-let G, uid=1;
 const $=id=>document.getElementById(id);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const hero=id=>HEROES.find(h=>h.id===id);
+function heroStats(h){const c=CLASSES[h.cls],s={};for(const [k] of STATS)s[k]=Math.max(k==='range'?0:1,c[k]+(h.mod[k]||0));return s;}
+
+/* ---- Progreso guardado: colección, equipo activo y posición ---- */
+function freshSave(){const owned={};START_OWNED.forEach(id=>owned[id]={hp:heroStats(hero(id)).hp});return {owned,party:START_PARTY.slice(),pos:{...WORLD.start}};}
+function loadSave(){
+  try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));
+    if(s&&s.owned&&Array.isArray(s.party)&&s.pos){
+      for(const id of Object.keys(s.owned))if(!hero(id))delete s.owned[id];
+      s.party=s.party.filter(id=>s.owned[id]).slice(0,PARTY_MAX);
+      if(s.party.length)return s;}}catch(e){}
+  return freshSave();
+}
+let P=loadSave();
+let W=freshWorld();
+function freshWorld(){return {p:{...P.pos},target:null,trail:[],groups:[],grace:0,inCastle:true,respawn:0,log:[],gid:1,battleGroup:null};}
+function persist(){P.pos={x:Math.round(W.p.x),y:Math.round(W.p.y)};try{localStorage.setItem(SAVE_KEY,JSON.stringify(P));}catch(e){}}
+let screen='world';
+
+/* ================= MUNDO ================= */
+function tree(x,y,s){return `M${x-s} ${y+s}L${x} ${y-s*1.3}L${x+s*.9} ${y+s*.95}M${x-s*1.15} ${y+s*.97}L${x+s*1.05} ${y+s*.93}`;}
+function rock(x,y,r){return `M${x-r} ${y+r*.25}C${x-r} ${y-r*.6} ${x+r*.25} ${y-r*.85} ${x+r} ${y-r*.1}C${x+r*1.1} ${y+r*.45} ${x+r*.4} ${y+r*.7} ${x-r*.3} ${y+r*.62}C${x-r*.85} ${y+r*.58} ${x-r} ${y+r*.45} ${x-r} ${y+r*.25}M${x-r*.75} ${y-r*.05}C${x-r*.7} ${y-r*.35} ${x-r*.45} ${y-r*.5} ${x-r*.2} ${y-r*.55}`;}
+function buildWorld(){
+  let grass='';const rnd=(()=>{let s=7;return()=>(s=(s*9301+49297)%233280)/233280;})();
+  for(let i=0;i<46;i++){const x=30+rnd()*840,y=30+rnd()*770;
+    if(dist({x,y},WORLD.castle)<110||WORLD.rocks.some(r=>dist({x,y},r)<r.r+20)||WORLD.forests.some(f=>dist({x,y},f)<f.r))continue;
+    grass+=`M${x-4} ${y-5}L${x} ${y}L${x+5} ${y-7}`;}
+  const castle='M105 355L107 296L127 290L128 207L172 203L174 262L205 263L207 300L235 305L232 358M101 362L232 360M157 360L157 327L181 327L181 358M140 203L140 192M152 203L152 192M164 203L164 192';
+  $('world-svg').innerHTML=`
+    <path class="ink soft" d="${grass}"/>
+    <path class="ink" d="${castle}"/>
+    ${WORLD.forests.map(f=>`<path class="ink" d="${f.trees.map(t=>tree(...t)).join('')}"/>`).join('')}
+    ${WORLD.rocks.map(r=>`<path class="ink" d="${rock(r.x,r.y,r.r)}"/>`).join('')}
+    <polyline id="w-trail" class="trail" points=""/>
+    <path id="w-aim" class="aim" d=""/>
+    <g id="w-enemies"></g>
+    <g id="w-party"></g>`;
+  renderPartyGlyph();
+}
+function renderPartyGlyph(){
+  const n=P.party.length,dots=P.party.map((id,i)=>`<circle cx="${(i-(n-1)/2)*11}" cy="-22" r="4.5" fill="${hero(id).color}" stroke="#2a2a2a" stroke-width="1.5"/>`).join('');
+  $('w-party').innerHTML=`<circle r="13" fill="#2a2a2a"/><circle r="7" fill="none" stroke="#f4f1e8" stroke-width="2"/>${dots}<title>Tu equipo</title>`;
+}
+function enemyGlyph(g){
+  const n=g.members.length,dots=g.members.map((id,i)=>`<circle cx="${(i-(n-1)/2)*10}" cy="-21" r="3.5" fill="#b3262d"/>`).join('');
+  return `<g class="eg" data-g="${g.id}"><circle r="12" fill="#f4f1e8" stroke="#b3262d" stroke-width="3"/><path d="M-5 -5L5 5M5 -5L-5 5" stroke="#b3262d" stroke-width="3" stroke-linecap="round"/>${dots}<text class="bang" x="12" y="-14">!</text><title>Patrulla: ${g.members.map(id=>hero(id).name).join(', ')}</title></g>`;
+}
+function spawnGroup(){
+  const opts=WORLD.spawns.filter(s=>dist(s,W.p)>260&&!W.groups.some(g=>dist(g.home,s)<80));if(!opts.length)return;
+  const s=pick(opts),n=Math.random()<.5?2:3;
+  /* Prioriza personajes que todavía no tenés, así ganar suma colección */
+  const fresh=shuffle(HEROES.filter(h=>!P.owned[h.id]).map(h=>h.id)),rest=shuffle(HEROES.filter(h=>P.owned[h.id]).map(h=>h.id));
+  W.groups.push({id:W.gid++,x:s.x,y:s.y,home:{...s},to:null,tt:0,pause:Math.random()*2,chasing:false,members:fresh.concat(rest).slice(0,n)});
+}
+const inForest=o=>WORLD.forests.some(f=>dist(o,f)<f.r);
+function moveToward(o,t,sp){const d=dist(o,t);if(d<=sp){o.x=t.x;o.y=t.y;return true;}o.x+=(t.x-o.x)/d*sp;o.y+=(t.y-o.y)/d*sp;return false;}
+function collide(o){
+  for(const r of WORLD.rocks){const d=dist(o,r)||.01,m=r.r*.85+10;if(d<m){o.x=r.x+(o.x-r.x)/d*m;o.y=r.y+(o.y-r.y)/d*m;}}
+  o.x=Math.min(WORLD.w-15,Math.max(15,o.x));o.y=Math.min(WORLD.h-15,Math.max(15,o.y));
+}
+function wlog(m){W.log.unshift(m);W.log=W.log.slice(0,30);if(screen==='world')$('wlog').innerHTML=W.log.map(l=>`<li>${l}</li>`).join('');}
+function restAtCastle(){
+  let healed=false;for(const id in P.owned){const mx=heroStats(hero(id)).hp;if(P.owned[id].hp<mx){P.owned[id].hp=mx;healed=true;}}
+  if(healed){wlog('🏰 Descansan en el castillo: todos recuperan la vida.');persist();renderWorldPanel();}
+}
+function step(dt){
+  W.grace=Math.max(0,W.grace-dt);
+  if(W.target){const sp=130*(inForest(W.p)?.55:1)*dt,ox=W.p.x,oy=W.p.y;
+    if(moveToward(W.p,W.target,sp))W.target=null;collide(W.p);
+    if(W.target&&Math.hypot(W.p.x-ox,W.p.y-oy)<sp*.2)W.target=null; /* trabado contra una roca */
+    const lt=W.trail[W.trail.length-1];if(!lt||dist(lt,W.p)>14){W.trail.push({x:W.p.x,y:W.p.y});if(W.trail.length>36)W.trail.shift();}}
+  const inC=dist(W.p,WORLD.castle)<WORLD.castle.r;if(inC&&!W.inCastle)restAtCastle();W.inCastle=inC;
+  const safe=dist(W.p,WORLD.castle)<95;
+  for(const g of W.groups){
+    g.chasing=!W.grace&&!safe&&dist(g,W.p)<170;
+    if(g.chasing)moveToward(g,W.p,78*(inForest(g)?.55:1)*dt);
+    else if(g.pause>0)g.pause-=dt;
+    else{if(!g.to){const a=Math.random()*Math.PI*2,r=30+Math.random()*90;g.to={x:g.home.x+Math.cos(a)*r,y:g.home.y+Math.sin(a)*r};g.tt=0;}
+      g.tt+=dt;if(moveToward(g,g.to,40*(inForest(g)?.55:1)*dt)||g.tt>6){g.to=null;g.pause=1+Math.random()*2.5;}}
+    collide(g);
+    const dc=dist(g,WORLD.castle)||.01;if(dc<115){g.x=WORLD.castle.x+(g.x-WORLD.castle.x)/dc*115;g.y=WORLD.castle.y+(g.y-WORLD.castle.y)/dc*115;g.to=null;}
+    if(!W.grace&&!safe&&dist(g,W.p)<24){startBattle(g);return;}
+  }
+  W.respawn+=dt;if(W.respawn>18){W.respawn=0;if(W.groups.length<4)spawnGroup();}
+}
+function drawWorld(){
+  $('w-trail').setAttribute('points',W.trail.map(p=>`${p.x|0},${p.y|0}`).join(' '));
+  const t=W.target;$('w-aim').setAttribute('d',t?`M${W.p.x} ${W.p.y}L${t.x} ${t.y}M${t.x-6} ${t.y-6}L${t.x+6} ${t.y+6}M${t.x+6} ${t.y-6}L${t.x-6} ${t.y+6}`:'');
+  $('w-party').setAttribute('transform',`translate(${W.p.x} ${W.p.y})`);
+  const eg=$('w-enemies'),ids=W.groups.map(g=>g.id).join();
+  if(eg.dataset.ids!==ids){eg.innerHTML=W.groups.map(enemyGlyph).join('');eg.dataset.ids=ids;}
+  W.groups.forEach((g,i)=>{const el=eg.children[i];el.setAttribute('transform',`translate(${g.x} ${g.y})`);el.classList.toggle('chase',g.chasing);});
+}
+let last=0;
+function tick(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;if(screen==='world'){step(dt);if(screen==='world')drawWorld();}requestAnimationFrame(tick);}
+$('world-svg').addEventListener('pointerdown',e=>{
+  if(screen!=='world')return;const pt=new DOMPoint(e.clientX,e.clientY).matrixTransform($('world-svg').getScreenCTM().inverse());
+  W.target={x:Math.min(WORLD.w-15,Math.max(15,pt.x)),y:Math.min(WORLD.h-15,Math.max(15,pt.y))};
+});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&screen==='world')persist();});
+
+function modText(h){return Object.entries(h.mod).map(([k,v])=>`${v>0?'+':'−'}${Math.abs(v)}${STATS.find(s=>s[0]===k)[1]}`).join(' ');}
+function heroCard(id,inParty){
+  const h=hero(id),s=heroStats(h),hp=P.owned[id].hp,mt=modText(h);
+  const btn=inParty?`<button class="btn" data-out="${id}" ${P.party.length<=1?'disabled title="Hace falta al menos uno"':''}>Sacar</button>`
+    :`<button class="btn" data-in="${id}" ${P.party.length>=PARTY_MAX?'disabled title="El equipo ya tiene 3"':''}>Meter</button>`;
+  return `<div class="hero"><span class="dot" style="--c:${h.color}"></span>
+    <div><b>${h.name}</b> <small>${CLASSES[h.cls].name}${mt?' · '+mt:''}</small>
+    <div class="meta"><span class="${hp<s.hp?'hurt':''}">❤️${hp}/${s.hp}</span> 👟${s.spd} 👊${s.atk} 🛡️${s.def} 💥${s.dmg} ⚡${s.range}</div></div>${btn}</div>`;
+}
+function renderWorldPanel(){
+  const slots=[];for(let i=0;i<PARTY_MAX;i++)slots.push(P.party[i]?heroCard(P.party[i],true):'<div class="slot-empty">Lugar libre</div>');
+  $('party').innerHTML=slots.join('');$('party-count').textContent=`${P.party.length}/${PARTY_MAX}`;
+  const bench=Object.keys(P.owned).filter(id=>!P.party.includes(id));
+  $('bench').innerHTML=bench.map(id=>heroCard(id,false)).join('')||'<p class="hint">Todos tus personajes están en el equipo.</p>';
+  $('coll-count').textContent=`colección ${Object.keys(P.owned).length}/${HEROES.length}`;
+  $('wlog').innerHTML=W.log.map(l=>`<li>${l}</li>`).join('');
+  renderPartyGlyph();
+}
+$('world-panel').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-in],button[data-out]');if(!b||b.disabled)return;
+  if(b.dataset.in&&P.party.length<PARTY_MAX)P.party.push(b.dataset.in);
+  if(b.dataset.out&&P.party.length>1)P.party=P.party.filter(id=>id!==b.dataset.out);
+  persist();renderWorldPanel();
+});
+$('btn-reset').onclick=()=>{if(!confirm('¿Borrar la colección y empezar de cero?'))return;P=freshSave();W=freshWorld();for(let i=0;i<4;i++)spawnGroup();persist();wlog('Arranca una nueva aventura.');renderWorldPanel();};
+function showScreen(){
+  const w=screen==='world';$('world-view').hidden=!w;$('world-panel').hidden=!w;$('battle-view').hidden=w;$('battle-panel').hidden=w;
+  $('subtitle').textContent=w?'Recorré el mapa con tu equipo. Si te cruzás una patrulla, se pelea.':'Escaramuza: 3 acciones por turno, cada ficha hace una sola cosa.';
+}
+
+/* ================= COMBATE ================= */
+let G, uid=1;
 const stat=(u,k)=>u[k];
 const unitAt=(x,y)=>G.units.find(u=>u.x===x&&u.y===y);
 const man=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
 const sel=()=>G.units.find(u=>u.id===G.sel);
-const teamName=t=>'Jugador '+t;
+const teamName=t=>t===1?'Tu equipo':'Rival';
 const tile=(x,y)=>{const r=G.map.rows[y];return r&&x>=0&&x<r.length?r[x]:'#';};
 const walkable=(x,y)=>{const t=tile(x,y);return t==='.'||t==='1'||t==='2';};
 const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
 
-function makeUnit(tpl,team,x,y){return {id:uid++,team,name:tpl.name,color:tpl.color,range:tpl.range,hp:tpl.hp,maxhp:tpl.hp,spd:tpl.spd,atk:tpl.atk,def:tpl.def,dmg:tpl.dmg,x,y,acted:false};}
+function makeUnit(h,team,x,y,hp){const s=heroStats(h);return {id:uid++,heroId:h.id,team,name:h.name,color:h.color,...s,hp:hp??s.hp,maxhp:s.hp,x,y,acted:false};}
 
-function newGame(){
-  const mi=parseInt($('cfg-map').value)||0;
-  G={map:MAPS[mi],W:Math.max(...MAPS[mi].rows.map(r=>r.length)),H:MAPS[mi].rows.length,units:[],turn:1,actions:ACTIONS,sel:null,mode:null,place:null,log:[],winner:null,round:1,busy:false};
-  const base=templates.slice(0,3);
-  for(const team of [1,2]){
-    const spots=[];G.map.rows.forEach((r,y)=>[...r].forEach((c,x)=>{if(c===String(team))spots.push([x,y]);}));
-    base.forEach((t,i)=>{if(spots[i])G.units.push(makeUnit(t,team,spots[i][0],spots[i][1]));});
-  }
+function startBattle(g){
+  screen='battle';W.target=null;W.battleGroup=g;persist();
+  const map=pick(MAPS);
+  G={map,W:Math.max(...map.rows.map(r=>r.length)),H:map.rows.length,units:[],turn:1,actions:ACTIONS,sel:null,mode:null,log:[],winner:null,round:1,busy:false,recruit:null};
+  const spots=t=>{const s=[];map.rows.forEach((r,y)=>[...r].forEach((c,x)=>{if(c===String(t))s.push([x,y]);}));return s;};
+  const s1=spots(1),s2=spots(2);
+  P.party.forEach((id,i)=>{if(s1[i])G.units.push(makeUnit(hero(id),1,s1[i][0],s1[i][1],P.owned[id].hp));});
+  g.members.forEach((id,i)=>{if(s2[i])G.units.push(makeUnit(hero(id),2,s2[i][0],s2[i][1]));});
   G.actions=Math.min(ACTIONS,G.units.filter(u=>u.team===1).length);
-  log(`Mapa: ${G.map.name}. Turno del Jugador 1.`);
-  render();
+  log(`⚔️ ¡Choque en ${map.name}! Arranca tu equipo.`);
+  $('rollinfo').innerHTML='<span class="hint">Los dados aparecen al atacar.</span>';
+  showScreen();render();window.scrollTo({top:0,behavior:'smooth'});
+}
+/* Pasa la vida del combate a la colección; quien cayó vuelve con 1 */
+function syncPartyHp(){P.party.forEach(id=>{const u=G.units.find(u=>u.team===1&&u.heroId===id);P.owned[id].hp=u?u.hp:1;});}
+function resolveBattle(w){
+  const g=W.battleGroup;
+  if(w===1){
+    syncPartyHp();W.groups=W.groups.filter(x=>x!==g);
+    const cand=g.members.filter(id=>!P.owned[id]);
+    if(cand.length){const id=pick(cand);P.owned[id]={hp:heroStats(hero(id)).hp};G.recruit=id;log(`🤝 ${hero(id).name} se suma a tu colección.`);}
+    wlog(`⚔️ Victoria en ${G.map.name}.${G.recruit?` ${hero(G.recruit).name} se unió.`:''}`);
+  }else{
+    for(const id in P.owned)P.owned[id].hp=heroStats(hero(id)).hp;
+    W.p={...WORLD.start};W.trail=[];W.inCastle=true;
+    wlog('💀 Derrota. El equipo vuelve al castillo y se recupera.');
+  }
+  W.grace=2.5;persist();
+}
+function backToWorld(){screen='world';G.sel=null;showScreen();renderWorldPanel();drawWorld();}
+function flee(){
+  if(G.busy||G.turn!==1||G.winner)return;
+  syncPartyHp();const g=W.battleGroup,d=dist(W.p,g)||1;
+  W.p.x+=(W.p.x-g.x)/d*60;W.p.y+=(W.p.y-g.y)/d*60;collide(W.p);
+  W.grace=3;wlog('🏃 Huyeron del combate.');persist();backToWorld();
 }
 
 function log(m){G.log.unshift(m);G.log=G.log.slice(0,40);}
-function canAct(u){return u&&!G.winner&&!G.busy&&u.team===G.turn&&!u.acted&&G.actions>0;}
+function canAct(u){return u&&!G.winner&&!G.busy&&G.turn===1&&u.team===1&&!u.acted&&G.actions>0;}
 
 function reachable(u){
   const sp=stat(u,'spd'),seen=new Set([u.x+','+u.y]),q=[[u.x,u.y,0]],out=new Set();
@@ -278,7 +471,7 @@ function clearLine(a,b){
   const dx=b.x-a.x,dy=b.y-a.y,n=Math.max(Math.abs(dx),Math.abs(dy))*8;
   for(let i=1;i<n;i++){const t=i/n,cx=Math.round(a.x+dx*t),cy=Math.round(a.y+dy*t);
     if((cx===a.x&&cy===a.y)||(cx===b.x&&cy===b.y))continue;
-    if(BLOCK_VIEW.has(tile(cx,cy))||unitAt(cx,cy))return false;}
+    const o=unitAt(cx,cy);if(BLOCK_VIEW.has(tile(cx,cy))||(o&&o!==a))return false;}
   return true;
 }
 function inRange(u,kind){
@@ -299,9 +492,39 @@ function endTurn(){
   G.units.forEach(u=>{if(u.team===G.turn)u.acted=false;});
   G.actions=Math.min(ACTIONS,G.units.filter(u=>u.team===G.turn).length);
   G.mode=null;G.sel=null;
-  log(`Turno del ${teamName(G.turn)} (ronda ${G.round}).`);
+  log(G.turn===1?`Te toca (ronda ${G.round}).`:'Turno del rival…');
+  if(G.turn===2)setTimeout(aiTurn,350);
 }
-function checkWinner(){for(const t of [1,2])if(!G.units.some(u=>u.team===t)){G.winner=3-t;log(`🏆 ¡Gana el ${teamName(3-t)}!`);}}
+function checkWinner(){
+  for(const t of [1,2])if(!G.winner&&!G.units.some(u=>u.team===t)){G.winner=3-t;log(G.winner===1?'🏆 ¡Ganaron!':'💀 Perdieron.');resolveBattle(G.winner);}
+}
+
+/* IA del rival: si puede pegar, le pega al más débil; si no, se acerca a una casilla desde donde pueda pegar */
+function aiScore(u,x,y){
+  const ox=u.x,oy=u.y;u.x=x;u.y=y;
+  const foes=G.units.filter(e=>e.team!==u.team),d=Math.min(...foes.map(e=>man(u,e)));
+  let s=-d;if(u.range>0&&targets(u,'range').length)s+=8;else if(targets(u,'close').length)s+=6;
+  if(u.range>1&&d===1)s-=3;
+  u.x=ox;u.y=oy;return s;
+}
+async function aiTurn(){
+  if(G.ai)return;G.ai=true;const battle=G;
+  while(screen==='battle'&&G===battle&&G.turn===2&&!G.winner&&G.actions>0){
+    G.busy=true;render();await wait(500);
+    const mine=G.units.filter(u=>u.team===2&&!u.acted);if(!mine.length)break;
+    let best=null;
+    for(const u of mine)for(const k of ['range','close'])for(const t of targets(u,k)){
+      const sc=10-t.hp+(t.hp<=u.dmg?5:0);if(!best||sc>best.sc)best={u,t,k,sc};}
+    if(best){G.sel=best.u.id;G.busy=false;await attack(best.u,best.t,best.k);continue;}
+    let mv=null;
+    for(const u of mine){const cur=aiScore(u,u.x,u.y);
+      for(const k of reachable(u)){const [x,y]=k.split(',').map(Number),s=aiScore(u,x,y);if(s>cur&&(!mv||s-cur>mv.gain))mv={u,x,y,gain:s-cur};}}
+    G.busy=false;
+    if(mv){G.sel=mv.u.id;log(`${mv.u.name} (rival) se mueve.`);mv.u.x=mv.x;mv.u.y=mv.y;spend(mv.u);render();continue;}
+    log('El rival espera.');endTurn();render();break;
+  }
+  battle.ai=false;battle.busy=false;if(G===battle)render();
+}
 
 const PIPS={1:[5],2:[1,9],3:[1,5,9],4:[1,3,7,9],5:[1,3,5,7,9],6:[1,3,4,6,7,9]};
 function drawDie(el,n){el.innerHTML=PIPS[n].map(p=>`<span style="grid-area:${Math.ceil(p/3)}/${(p-1)%3+1}"></span>`).join('');}
@@ -320,15 +543,15 @@ async function attack(att,def,kind){
   const dmg=hit?stat(att,'dmg')+(crit?1:0):0;
   const label=fumble?'¡PIFIA!':crit?'¡CRÍTICO!':hit?'¡IMPACTO!':'FALLÓ';
   $('rollinfo').innerHTML=`<span class="res ${hit?'hit':'miss'}">${label}</span>👊${av} + 🎲${sum} = <b>${av+sum}</b> vs 🛡️${dv}${hit?` · 💥${dmg}`:''}`;
-  log(`${att.name} (J${att.team}) ataca ${kind==='close'?'de cerca':'a distancia'} a ${def.name} (J${def.team}): ${av}+${sum}=${av+sum} vs ${dv} → ${label}${hit?` −${dmg} ❤️`:''}`);
-  if(hit){def.hp=Math.max(0,def.hp-dmg);if(def.hp<=0){G.units=G.units.filter(u=>u!==def);log(`💀 ${def.name} (J${def.team}) queda KO.`);}}
+  const who=u=>`${u.name}${u.team===2?' (rival)':''}`;
+  log(`${who(att)} ataca ${kind==='close'?'de cerca':'a distancia'} a ${who(def)}: ${av}+${sum}=${av+sum} vs ${dv} → ${label}${hit?` −${dmg} ❤️`:''}`);
+  if(hit){def.hp=Math.max(0,def.hp-dmg);if(def.hp<=0){G.units=G.units.filter(u=>u!==def);log(`💀 ${who(def)} queda KO.`);}}
   checkWinner();G.busy=false;spend(att);render();
 }
 
 function onCell(x,y){
-  if(G.busy)return;const u=unitAt(x,y),s=sel();
-  if(G.mode==='place'){if(!u&&walkable(x,y)){const t=templates.find(t=>t.id===G.place.tplId);if(t){const nu=makeUnit(t,G.place.team,x,y);G.units.push(nu);G.sel=nu.id;log(`Se suma ${t.name} al ${teamName(G.place.team)}.`);G.winner=null;}G.mode=null;G.place=null;}render();return;}
-  if(G.mode==='move'&&s&&!u&&reachable(s).has(x+','+y)){log(`${s.name} (J${s.team}) se mueve.`);s.x=x;s.y=y;spend(s);render();return;}
+  if(G.busy||G.winner||G.turn!==1)return;const u=unitAt(x,y),s=sel();
+  if(G.mode==='move'&&s&&!u&&reachable(s).has(x+','+y)){log(`${s.name} se mueve.`);s.x=x;s.y=y;spend(s);render();return;}
   if((G.mode==='close'||G.mode==='range')&&s&&u&&targets(s,G.mode).includes(u)){attack(s,u,G.mode);return;}
   G.mode=null;G.sel=u?u.id:null;render();
 }
@@ -339,6 +562,7 @@ function statsHTML(u){
 }
 
 function render(){
+  if(screen!=='battle')return;
   const s=sel();
   let mv=new Set(),rg=new Set(),tg=[];
   if(s&&G.mode==='move')mv=reachable(s);
@@ -351,85 +575,57 @@ function render(){
     if(mv.has(k))cls.push('mv');if(rg.has(k))cls.push('atk');if(u&&tg.includes(u))cls.push('tg');
     const ob=OB[t]?`<span class="ob">${OB[t]}</span>`:'';
     const tok=u?`<div class="tok j${u.team}${u.acted&&u.team===G.turn?' acted':''}${G.sel===u.id?' sel':''}" style="--c:${u.color}"><span class="nm">${esc(u.name)}</span><span class="hp">${u.hp}</span></div>`:'';
-    h+=`<button class="${cls.join(' ')}" style="--g1:${G.map.g1};--g2:${G.map.g2}" data-x="${x}" data-y="${y}" aria-label="Casilla ${x+1},${y+1}${u?': '+esc(u.name)+' J'+u.team:''}">${ob}${tok}</button>`;}
+    h+=`<button class="${cls.join(' ')}" style="--g1:${G.map.g1};--g2:${G.map.g2}" data-x="${x}" data-y="${y}" aria-label="Casilla ${x+1},${y+1}${u?': '+esc(u.name)+(u.team===2?' rival':''):''}">${ob}${tok}</button>`;}
   b.innerHTML=h;
 
   const bn=$('banner');
-  if(G.winner)bn.innerHTML=`<span class="win">🏆 ¡Gana el ${teamName(G.winner)}!</span>`;
-  else if(G.mode==='place'){const t=templates.find(t=>t.id===G.place.tplId);bn.innerHTML=`<span class="pill j${G.place.team}">J${G.place.team}</span> Tocá una casilla libre para poner a <b>${t?esc(t.name):''}</b> <button id="btn-cancel">Cancelar</button>`;}
-  else if(G.mode==='move')bn.innerHTML=`<span class="pill j${G.turn}">J${G.turn}</span> ${mv.size?'Elegí una casilla marcada para moverte.':'No hay lugar para moverse.'}`;
-  else if(G.mode)bn.innerHTML=`<span class="pill j${G.turn}">J${G.turn}</span> ${tg.length?'Tocá un enemigo marcado en rojo.':'No hay enemigos a tiro.'}`;
-  else bn.innerHTML=`<span class="pill j${G.turn}">J${G.turn}</span> Turno del ${teamName(G.turn)}: tocá una de tus fichas.`;
-  const c=$('btn-cancel');if(c)c.onclick=()=>{G.mode=null;G.place=null;render();};
+  if(G.winner)bn.innerHTML=`<span class="win"${G.winner===2?' style="color:var(--red)"':''}>${G.winner===1?'🏆 ¡Ganaron!':'💀 Derrota'}</span>`;
+  else if(G.turn===2)bn.innerHTML=`<span class="pill j2">Rival</span> El rival está pensando…`;
+  else if(G.mode==='move')bn.innerHTML=`<span class="pill j1">Vos</span> ${mv.size?'Elegí una casilla marcada para moverte.':'No hay lugar para moverse.'}`;
+  else if(G.mode)bn.innerHTML=`<span class="pill j1">Vos</span> ${tg.length?'Tocá un enemigo marcado en rojo.':'No hay enemigos a tiro.'}`;
+  else bn.innerHTML=`<span class="pill j1">Vos</span> Tu turno: tocá una de tus fichas.`;
 
   $('turnlabel').innerHTML=`<span class="pill j${G.turn}">${teamName(G.turn)}</span>`;
   const p=$('pips');p.className='pips j'+G.turn;p.title=`Acciones restantes: ${G.actions}`;
   p.innerHTML=Array.from({length:ACTIONS},(_,i)=>`<i class="${i<G.actions?'full':''}"></i>`).join('');
-  $('btn-end').disabled=!!G.winner||G.busy;
+  const myTurn=!G.winner&&!G.busy&&G.turn===1;
+  $('btn-end').disabled=!myTurn;$('btn-flee').disabled=!myTurn;
 
   const up=$('unitpanel');
-  if(!s){up.innerHTML=`<p class="hint">Tocá una ficha para ver sus stats. Si es tuya y no actuó todavía, elegí qué hace: mover, pegar o disparar.</p>`;}
+  if(G.winner){
+    const r=G.recruit?hero(G.recruit):null;
+    up.innerHTML=`<div class="result">${G.winner===1
+      ?`<p class="hint">La patrulla quedó fuera de combate. Quien cayó vuelve al mapa con 1 ❤️.</p>${r?`<div class="unit-head"><span class="dot" style="--c:${r.color}"></span><div><b>🤝 ${r.name} se suma</b><br><small>${CLASSES[r.cls].name}${modText(r)?' · '+modText(r):''} · lo encontrás en la banca</small></div></div>`:''}`
+      :'<p class="hint">El equipo vuelve al castillo con la vida llena.</p>'}
+      <button class="btn red" id="btn-back">Volver al mapa</button></div>`;
+    $('btn-back').onclick=backToWorld;
+  }
+  else if(!s){up.innerHTML=`<p class="hint">Tocá una ficha para ver sus stats. Si es tuya y no actuó todavía, elegí qué hace: mover, pegar o disparar.</p>`;}
   else{const ok=canAct(s);
-    const st=s.team!==G.turn?'Ficha rival':s.acted?'Ya actuó este turno':G.actions<=0?'Sin acciones':'Lista para actuar';
-    up.innerHTML=`<div class="unit-head"><span class="dot j${s.team}" style="--c:${s.color}"></span><div><b>${esc(s.name)}</b><br><small>J${s.team} · ❤️ ${s.hp}/${s.maxhp} · ${st}</small></div></div>
+    const st=s.team!==1?'Ficha rival':s.acted?'Ya actuó este turno':G.turn!==1?'Turno del rival':G.actions<=0?'Sin acciones':'Lista para actuar';
+    up.innerHTML=`<div class="unit-head"><span class="dot j${s.team}" style="--c:${s.color}"></span><div><b>${esc(s.name)}</b><br><small>${teamName(s.team)} · ❤️ ${s.hp}/${s.maxhp} · ${st}</small></div></div>
     ${statsHTML(s)}
-    <div class="actions">
+    ${s.team===1?`<div class="actions">
       <button class="btn${G.mode==='move'?' on':''}" data-act="move" ${ok?'':'disabled'}>👟 Mover (${stat(s,'spd')})</button>
       <button class="btn${G.mode==='close'?' on':''}" data-act="close" ${ok?'':'disabled'}>👊 De cerca</button>
       <button class="btn${G.mode==='range'?' on':''}" data-act="range" ${ok&&s.range>0?'':'disabled'}>⚡ A distancia (${s.range})</button>
-      <button class="btn" data-act="remove" ${G.busy?'disabled':''}>Quitar del mapa</button>
-    </div>`;
-    up.querySelectorAll('[data-act]').forEach(bt=>bt.onclick=()=>{const a=bt.dataset.act;
-      if(a==='remove'){G.units=G.units.filter(u=>u!==s);log(`${s.name} (J${s.team}) sale del mapa.`);G.sel=null;G.mode=null;checkWinner();}
-      else G.mode=G.mode===a?null:a;render();});
+    </div>`:''}`;
+    up.querySelectorAll('[data-act]').forEach(bt=>bt.onclick=()=>{const a=bt.dataset.act;G.mode=G.mode===a?null:a;render();});
   }
   $('log').innerHTML=G.log.map(l=>`<li>${l}</li>`).join('');
-  renderTemplates();
 }
-
-$('cfg-map').innerHTML=MAPS.map((m,i)=>`<option value="${i}">${m.name}</option>`).join('');
-$('board').addEventListener('click',e=>{const c=e.target.closest('button.cell');if(c)onCell(+c.dataset.x,+c.dataset.y);});
-$('btn-end').onclick=()=>{if(!G.busy){endTurn();render();}};
-$('btn-new').onclick=()=>{uid=1;newGame();$('rollinfo').innerHTML='<span class="hint">Los dados aparecen al atacar.</span>';};
-$('cfg-map').onchange=()=>$('btn-new').click();
-document.querySelectorAll('.tabs button').forEach(bt=>bt.onclick=()=>{
-  document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===bt));
-  $('tab-play').hidden=bt.dataset.tab!=='play';$('tab-pieces').hidden=bt.dataset.tab!=='pieces';});
-
-/* ---- Editor de fichas ---- */
-let edit=null;
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-function renderTemplates(){
-  $('tpl-list').innerHTML=templates.map(t=>`<div class="tpl"><span class="dot" style="--c:${t.color}"></span>
-    <div><b>${esc(t.name)}</b><div class="meta">❤️${t.hp} 👟${t.spd} 👊${t.atk} 🛡️${t.def} 💥${t.dmg} ⚡${t.range}</div></div>
-    <div class="btns"><button class="btn" data-t="${t.id}" data-do="p1">Poner J1</button><button class="btn" data-t="${t.id}" data-do="p2">Poner J2</button>
-    <button class="btn" data-t="${t.id}" data-do="edit">Editar</button><button class="btn" data-t="${t.id}" data-do="del">Borrar</button></div></div>`).join('')||'<p class="hint">No hay fichas. Creá una nueva.</p>';
-  $('tpl-list').querySelectorAll('[data-do]').forEach(bt=>bt.onclick=()=>{const t=templates.find(x=>x.id===bt.dataset.t),d=bt.dataset.do;
-    if(d==='p1'||d==='p2'){G.mode='place';G.place={tplId:t.id,team:d==='p1'?1:2};G.sel=null;render();$('board').scrollIntoView({behavior:'smooth',block:'nearest'});}
-    else if(d==='edit'){edit=clone(t);renderEditor();}
-    else if(d==='del'){templates=templates.filter(x=>x!==t);save();if(edit&&edit.id===t.id){edit=null;$('editor').hidden=true;}renderTemplates();}});
-}
-function renderEditor(){
-  const e=$('editor');e.hidden=false;
-  e.innerHTML=`<h2>${templates.some(x=>x.id===edit.id)?'Editar ficha':'Nueva ficha'}</h2>
-  <div class="fields">
-    <label>Nombre<input id="ed-name" value="${esc(edit.name)}"></label>
-    <label>Color<input id="ed-color" type="color" value="${edit.color}"></label>
-    ${STATS.map(([k,ic,l])=>`<label>${ic} ${l}${k==='range'?' (0 = solo de cerca)':''}<input id="ed-${k}" type="number" min="${k==='range'?0:1}" max="20" value="${edit[k]}"></label>`).join('')}
-  </div>
-  <div class="cfg"><button class="btn red" id="ed-save">Guardar ficha</button><button class="btn ml" id="ed-cancel">Cerrar</button></div>`;
-  $('ed-save').onclick=()=>{readEditor();const i=templates.findIndex(x=>x.id===edit.id);if(i>=0)templates[i]=clone(edit);else templates.push(clone(edit));save();renderTemplates();$('ed-save').textContent='Guardada ✓';};
-  $('ed-cancel').onclick=()=>{edit=null;e.hidden=true;};
-}
-function readEditor(){
-  edit.name=$('ed-name').value.trim()||'Ficha';edit.color=$('ed-color').value;
-  for(const [k] of STATS){const x=parseInt($('ed-'+k).value);if(!isNaN(x))edit[k]=Math.max(k==='range'?0:1,x);}
-}
-$('btn-newtpl').onclick=()=>{edit={id:'t'+Date.now(),name:'Nueva ficha',color:'#8a5cf5',hp:3,spd:3,atk:5,def:11,dmg:1,range:0};renderEditor();};
-$('btn-resettpl').onclick=()=>{templates=clone(DEFAULTS);save();edit=null;$('editor').hidden=true;renderTemplates();};
+
+$('board').addEventListener('click',e=>{const c=e.target.closest('button.cell');if(c)onCell(+c.dataset.x,+c.dataset.y);});
+$('btn-end').onclick=()=>{if(!G.busy&&G.turn===1&&!G.winner){endTurn();render();}};
+$('btn-flee').onclick=flee;
 
 drawDie($('d1'),6);drawDie($('d2'),6);
-newGame();
+buildWorld();
+for(let i=0;i<4;i++)spawnGroup();
+wlog('Tu equipo sale del castillo. Tocá el mapa para moverte.');
+renderWorldPanel();showScreen();drawWorld();
+requestAnimationFrame(tick);
 </script>
 
 </html>
