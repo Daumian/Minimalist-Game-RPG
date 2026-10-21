@@ -1,16 +1,25 @@
-ISLETAS - juego de tácticas por turnos
+ISLETAS - aventura minimalista con combate táctico por turnos
 
 Cómo jugar: abrí index.html con doble clic en cualquier navegador (no necesita internet,
 salvo para cargar las tipografías; sin conexión usa unas de reemplazo).
 
-Reglas:
-- 2 jugadores en la misma pantalla. Cada turno tenés 3 acciones.
-- Cada acción = una ficha hace UNA cosa: mover, pegar de cerca o disparar.
+Mapa del mundo:
+- Tocá el mapa para mover a tu equipo. Los bosques frenan, las rocas no se atraviesan.
+- Las patrullas rivales deambulan y te persiguen si te acercás. Si te alcanzan, se pelea.
+- El castillo es zona segura: ahí no entran y tu equipo recupera toda la vida.
+- Tenés 3 lugares en el equipo activo; el resto queda en la banca (Sacar / Meter).
+- Al ganar, uno de los rivales que todavía no tengas se suma a tu colección.
+- La vida perdida se mantiene. Quien cae en una pelea ganada vuelve con 1 vida.
+  Si perdés, volvés al castillo con todos curados. También podés huir en tu turno.
+
+Combate (vos contra la máquina):
+- Cada turno tenés 3 acciones. Cada acción = una ficha hace UNA cosa: mover, pegar de cerca o disparar.
 - Movimiento y ataque de cerca solo en cruz (sin diagonales).
 - Ataque: ataque + 2d6 >= defensa del rival = impacto, le sacás tanta vida como tu daño.
 - Doble 6 = crítico (+1 daño). Doble 1 = pifia.
 - Árboles, casas y pozos tapan la vista. Calabazas, arbustos y agua solo frenan el paso.
 
-Las fichas que crees o edites se guardan en el navegador.
-Los mapas están en el array MAPS dentro de index.html (# vacío, . pasto, 1/2 salidas,
-T árbol, H casa, W pozo, o arbusto, p calabaza, ~ agua).
+El progreso (colección, equipo y posición) se guarda en el navegador.
+En index.html: CLASSES (clases base), HEROES (personajes = clase + variación chica),
+MAPS (mapas de combate: # vacío, . pasto, 1/2 salidas, T árbol, H casa, W pozo, o arbusto,
+p calabaza, ~ agua) y WORLD (castillo, rocas, bosques y puntos de aparición del mapa del mundo).
