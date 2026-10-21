@@ -14,10 +14,12 @@ Mapa del mundo:
 
 Combate (vos contra la máquina):
 - Cada turno tenés 3 acciones. Cada acción = una ficha hace UNA cosa: mover, pegar de cerca o disparar.
-- Movimiento y ataque de cerca solo en cruz (sin diagonales).
+- Movimiento solo en cruz (sin diagonales). El volador pasa por encima de fichas, obstáculos y agua.
+- Ataque de cerca a cualquiera de las 8 casillas de alrededor.
 - Ataque: ataque + 2d6 >= defensa del rival = impacto, le sacás tanta vida como tu daño.
 - Doble 6 = crítico (+1 daño). Doble 1 = pifia.
-- Árboles, casas y pozos tapan la vista. Calabazas, arbustos y agua solo frenan el paso.
+- Árboles, casas y pozos tapan la vista. Cada ficha, calabaza o arbusto en el medio resta 1 al tiro.
+- Los mapas de combate se generan al azar (a veces sale uno de los hechos a mano).
 
 El progreso (colección, equipo y posición) se guarda en el navegador.
 En index.html: CLASSES (clases base), HEROES (personajes = clase + variación chica),
