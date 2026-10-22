@@ -105,9 +105,12 @@ details summary{cursor:pointer;color:var(--ink);font-weight:600}
 details ul{padding-left:18px;margin:6px 0}
 .win{font-family:var(--f-display);font-size:1.8rem;letter-spacing:.04em;color:var(--good)}
 /* Mundo: hoja de papel con dibujos a mano, el equipo se mueve tocando el mapa */
-.paper{background:#f4f1e8;border-radius:8px;overflow:hidden;box-shadow:0 4px 0 rgba(0,0,0,.35)}
+.paper{position:relative;background:#f4f1e8;border-radius:8px;overflow:hidden;box-shadow:0 4px 0 rgba(0,0,0,.35)}
 #world-svg{display:block;width:100%;height:auto;cursor:crosshair;touch-action:manipulation;user-select:none}
 .ink{fill:none;stroke:#2a2a2a;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.ink.red{stroke:#b3262d}
+.wlabel{font-family:var(--f-num);font-size:20px;font-weight:600;fill:#5a564c;text-anchor:middle;letter-spacing:.03em}
+.coords{position:absolute;top:8px;left:10px;z-index:1;font-family:var(--f-num);font-weight:600;font-size:14px;letter-spacing:.03em;color:#3a3a3a;background:rgba(244,241,232,.88);padding:1px 8px;border-radius:3px;pointer-events:none}
 .ink.soft{stroke:#9a978c;stroke-width:1.8}
 .trail{fill:none;stroke:#2a2a2a;stroke-width:3;stroke-linecap:round;stroke-dasharray:1 13}
 .aim{fill:none;stroke:#2a2a2a;stroke-width:1.6;stroke-dasharray:4 6;opacity:.45}
@@ -151,13 +154,13 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
 
 <main class="layout">
   <section id="world-view">
-    <div class="paper"><svg id="world-svg" viewBox="0 0 900 830" role="img" aria-label="Mapa del mundo: tocá para mover a tu equipo"></svg></div>
+    <div class="paper"><div class="coords" id="coords"></div><svg id="world-svg" viewBox="0 0 900 830" role="img" aria-label="Mapa del mundo: tocá para mover a tu equipo"></svg></div>
     <div class="legend">
       <span>⚫ Tu equipo</span>
       <span>⊗ Patrulla rival (<b style="color:#e3363e">!</b> = te persigue)</span>
       <span>⭐ Trae a alguien que se puede sumar</span>
-      <span>🏰 Castillo: zona segura, recupera vida y cambiás quién viaja</span>
-      <span>🌲 Bosque: más lento</span>
+      <span>🏰🏘️ Castillo y pueblos: zona segura, recuperan la vida y cambiás quién viaja</span>
+      <span>🌲 Bosque: más lento · 🗺️ Acercate al borde para seguir explorando</span>
     </div>
   </section>
 
@@ -167,7 +170,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
     <div class="legend">
       <span><i style="background:var(--p1)"></i>Tu equipo</span>
       <span><i style="background:var(--p2)"></i>Rival</span>
-      <span>🌲🏠⛲ tapan la vista · 🎃🌿 y fichas restan 10% al tiro · 💧 solo frena el paso</span>
+      <span>🌲🏠⛲🪨 tapan la vista · 🎃🌿🌵 y fichas restan 10% al tiro · 💧 solo frena el paso</span>
     </div>
   </section>
 
@@ -178,9 +181,9 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       <div class="roster" id="party"></div>
       <h2 class="sub">Reserva <small id="res-count"></small></h2>
       <div class="roster" id="bench"></div>
-      <h2 class="sub">Castillo <small id="coll-count"></small></h2>
+      <h2 class="sub">Cuartel <small id="coll-count"></small></h2>
       <div class="roster" id="barracks"></div>
-      <p class="hint">Tocá el mapa para moverte. Las patrullas te persiguen si te acercás; en el castillo no entran. De viaje llevás hasta 6 (3 activos + reserva); el resto te espera en el castillo. Solo las patrullas con ⭐ traen a alguien que se puede sumar, y cada personaje se consigue una sola vez.</p>
+      <p class="hint">Tocá el mapa para moverte. Las patrullas te persiguen si te acercás; en el castillo y los pueblos no entran. De viaje llevás hasta 6 (3 activos + reserva); el resto espera en el cuartel, que se usa desde el castillo o cualquier pueblo. Cada zona tiene sus rivales y sus personajes: los arqueros andan por el bosque, los soldados por las montañas y los voladores por los acantilados. Solo las patrullas con ⭐ traen a alguien que se puede sumar, y cada personaje se consigue una sola vez.</p>
       <ol id="wlog"></ol>
       <div class="cfg"><button class="btn ml" id="btn-reset">Borrar progreso</button></div>
     </div>
@@ -244,7 +247,10 @@ const HEROES=[
 const FOES=[
   {id:'bandido',name:'Bandido',cls:'soldado',color:'#7d6b5a',mod:{},look:{skin:'#d9a066',hair:'#3a2a1a',weapon:'sword'}},
   {id:'arquero',name:'Arquero',cls:'tirador',color:'#5d6b4a',mod:{},look:{skin:'#c68642',hair:'#222222',hood:true}},
-  {id:'cuervo',name:'Cuervo',cls:'volador',color:'#3e3e48',mod:{},look:{skin:'#e0ac69',hair:'#111111',wing:'#6a6a74'}}
+  {id:'cuervo',name:'Cuervo',cls:'volador',color:'#3e3e48',mod:{},look:{skin:'#e0ac69',hair:'#111111',wing:'#6a6a74'}},
+  {id:'minero',name:'Minero',cls:'soldado',color:'#8a7a5a',mod:{hp:1,mhit:-10},look:{skin:'#e0ac69',hair:'#3a2a1a',weapon:'axe'}},
+  {id:'nomada',name:'Nómada',cls:'tirador',color:'#c9a04a',mod:{range:1,rhit:-10},look:{skin:'#c68642',hair:'#222222',hood:true}},
+  {id:'templario',name:'Templario',cls:'soldado',color:'#d8d4cc',mod:{hp:1,mhit:10},ability:'escudo',look:{skin:'#f1c27d',hair:'#6a4a2a',weapon:'sword',shield:true}}
 ];
 /* Habilidad mayor de cada personaje: las de acción tienen botón propio y gastan la acción; las pasivas funcionan solas */
 const ABILITIES={
@@ -301,18 +307,48 @@ const MAPS=[
     '#..1...#',
     '##.1.1##']}
 ];
-/* Mundo en coordenadas del viewBox 900x830 */
-const WORLD={
-  w:900,h:830,castle:{x:169,y:345,r:70},start:{x:169,y:400},
-  rocks:[{x:453,y:295,r:32},{x:700,y:567,r:42},{x:357,y:712,r:38}],
+/* Mundo: 7×7 zonas de 900×830; la (0,0) es la del castillo. En pantalla X crece al este e Y al norte */
+const ZW=900,ZH=830,ZR=3,VW=900,VH=830,CAM_M=150;
+const BIOMES={
+  pradera:{name:'Pradera',tint:'#f4f1e8',foes:['bandido','arquero','cuervo'],stars:[]},
+  bosque:{name:'Bosque',tint:'#eaefdc',foes:['arquero','arquero','bandido'],stars:['lia','ojo','aguja']},
+  montana:{name:'Montañas y minas',tint:'#eeeae3',foes:['minero','minero','bandido'],stars:['bruno','toro','muro']},
+  desierto:{name:'Desierto',tint:'#f7ecd0',foes:['nomada','nomada','bandido'],stars:[],gold:6},
+  acantilado:{name:'Acantilados',tint:'#e9f0f2',foes:['cuervo','cuervo','arquero'],stars:['pico','rayo','zarpa']},
+  templario:{name:'Castillo templario',tint:'#f0e9e4',foes:['templario','templario','arquero'],stars:[],gold:12,size:3}
+};
+const TEMPLARS=['3,-3','-3,3'];
+function biomeOf(zx,zy){
+  if(TEMPLARS.includes(zx+','+zy))return 'templario';
+  if(Math.max(Math.abs(zx),Math.abs(zy))<=1)return 'pradera';
+  if(-zy>=Math.abs(zx))return 'bosque';
+  if(zx>=Math.abs(zy))return 'montana';
+  if(zy>=Math.abs(zx))return 'desierto';
+  return 'acantilado';
+}
+/* Zona del castillo: el dibujo original */
+const ZONE0={
   forests:[
     {x:668,y:205,r:92,trees:[[612,163,18],[690,135,22],[733,180,22],[602,228,17],[662,205,40],[675,262,26]]},
     {x:220,y:505,r:85,trees:[[185,472,22],[212,490,30],[178,545,28],[260,530,20],[305,458,16]]}
   ],
+  rocks:[{x:453,y:295,r:32},{x:700,y:567,r:42},{x:357,y:712,r:38}],
   spawns:[{x:560,y:430},{x:800,y:330},{x:520,y:620},{x:790,y:740},{x:420,y:120},{x:820,y:90},{x:140,y:720},{x:600,y:780}]
 };
-const OB={T:'🌲',H:'🏠',W:'⛲',o:'🌿',p:'🎃'};
-const BLOCK_VIEW=new Set(['T','H','W']);
+const TOWN_LIST=[
+  {id:'musgo',name:'Villa Musgo',zx:0,zy:-2},{id:'bruma',name:'Bruma',zx:-2,zy:-2},{id:'fragua',name:'La Fragua',zx:2,zy:0},
+  {id:'cantera',name:'La Cantera',zx:2,zy:2},{id:'duna',name:'Duna Seca',zx:0,zy:2},{id:'penasco',name:'Peñasco',zx:-2,zy:0}
+];
+const WORLD={
+  minX:-ZR*ZW,maxX:(ZR+1)*ZW,minY:-ZR*ZH,maxY:(ZR+1)*ZH,
+  castle:{x:169,y:345},start:{x:169,y:400},
+  towns:[{id:'castle',name:'el castillo',icon:'🏰',x:169,y:345,r:70,start:{x:169,y:400}},
+    ...TOWN_LIST.map(t=>({id:t.id,name:t.name,icon:'🏘️',zone:t.zx+','+t.zy,x:t.zx*ZW+450,y:t.zy*ZH+400,r:70,start:{x:t.zx*ZW+450,y:t.zy*ZH+460}}))],
+  blockers:[],slow:[],spawns:[]
+};
+const townAt=p=>WORLD.towns.find(t=>dist(p,t)<t.r)||null;
+const OB={T:'🌲',H:'🏠',W:'⛲',R:'🪨',o:'🌿',p:'🎃',C:'🌵'};
+const BLOCK_VIEW=new Set(['T','H','W','R']);
 const SAVE_KEY='isletas.save.v2';
 const clone=o=>JSON.parse(JSON.stringify(o));
 const $=id=>document.getElementById(id);
@@ -329,7 +365,7 @@ function heroStats(h){
 function statVal(s,k){if(!s.range&&(k==='rhit'||k==='range'||k==='rdmg'))return '—';return PCT.has(k)?s[k]+'%':s[k];}
 
 /* ---- Progreso guardado: colección, equipo activo y posición ---- */
-function freshSave(){const owned={};START_OWNED.forEach(id=>owned[id]={hp:heroStats(hero(id)).hp});return {owned,party:START_PARTY.slice(),carry:START_OWNED.slice(),streak:0,gold:0,pos:{...WORLD.start}};}
+function freshSave(){const owned={};START_OWNED.forEach(id=>owned[id]={hp:heroStats(hero(id)).hp});return {owned,party:START_PARTY.slice(),carry:START_OWNED.slice(),streak:0,gold:0,home:'castle',pos:{...WORLD.start}};}
 function loadSave(){
   try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));
     if(s&&s.owned&&Array.isArray(s.party)&&s.pos){
@@ -338,36 +374,97 @@ function loadSave(){
       /* Partidas viejas no tenían "llevados": se arma con el equipo y la banca hasta 6 */
       const carry=Array.isArray(s.carry)?s.carry:Object.keys(s.owned);
       s.carry=[...new Set([...s.party,...carry.filter(id=>s.owned[id])])].slice(0,CARRY_MAX);
-      s.streak=s.streak|0;s.gold=s.gold|0;
+      s.streak=s.streak|0;s.gold=s.gold|0;s.home=s.home||'castle';
+      s.pos.x=Math.min(WORLD.maxX-15,Math.max(WORLD.minX+15,+s.pos.x||0));s.pos.y=Math.min(WORLD.maxY-15,Math.max(WORLD.minY+15,+s.pos.y||0));
       if(s.party.length)return s;}}catch(e){}
   return freshSave();
 }
 let P=loadSave();
 let W=freshWorld();
-function freshWorld(){return {p:{...P.pos},target:null,trail:[],groups:[],grace:0,inCastle:dist(P.pos,WORLD.castle)<WORLD.castle.r,respawn:0,log:[],gid:1,battleGroup:null};}
+function freshWorld(){const town=townAt(P.pos);return {p:{...P.pos},cam:{x:0,y:0},camSnap:true,target:null,trail:[],groups:[],grace:0,town,inCastle:!!town,respawn:0,log:[],gid:1,battleGroup:null};}
 function persist(){P.pos={x:Math.round(W.p.x),y:Math.round(W.p.y)};try{localStorage.setItem(SAVE_KEY,JSON.stringify(P));}catch(e){}}
 let screen='world';
 
 /* ================= MUNDO ================= */
 function tree(x,y,s){return `M${x-s} ${y+s}L${x} ${y-s*1.3}L${x+s*.9} ${y+s*.95}M${x-s*1.15} ${y+s*.97}L${x+s*1.05} ${y+s*.93}`;}
 function rock(x,y,r){return `M${x-r} ${y+r*.25}C${x-r} ${y-r*.6} ${x+r*.25} ${y-r*.85} ${x+r} ${y-r*.1}C${x+r*1.1} ${y+r*.45} ${x+r*.4} ${y+r*.7} ${x-r*.3} ${y+r*.62}C${x-r*.85} ${y+r*.58} ${x-r} ${y+r*.45} ${x-r} ${y+r*.25}M${x-r*.75} ${y-r*.05}C${x-r*.7} ${y-r*.35} ${x-r*.45} ${y-r*.5} ${x-r*.2} ${y-r*.55}`;}
+function mountain(x,y,r){return `M${x-r} ${y+r*.55}L${x-r*.25} ${y-r*.7}L${x+r*.1} ${y-r*.25}L${x+r*.35} ${y-r*.5}L${x+r} ${y+r*.55}M${x-r*.5} ${y-r*.15}L${x-r*.36} ${y-r*.08}L${x-r*.24} ${y-r*.25}L${x-r*.1} ${y-r*.08}M${x-r*1.05} ${y+r*.57}L${x+r*1.02} ${y+r*.53}`;}
+function mine(x,y){return `M${x-11} ${y}L${x-11} ${y-12}Q${x} ${y-25} ${x+11} ${y-12}L${x+11} ${y}M${x-5} ${y}L${x-5} ${y-12}M${x+5} ${y}L${x+5} ${y-12}`;}
+function cactus(x,y){return `M${x} ${y+14}L${x} ${y-14}M${x} ${y}L${x-8} ${y}L${x-8} ${y-8}M${x} ${y+4}L${x+7} ${y+4}L${x+7} ${y-5}`;}
+function dune(x,y,w){return `M${x-w} ${y}Q${x-w/2} ${y-w*.35} ${x} ${y}T${x+w} ${y}`;}
+function cloud(x,y){return `M${x-30} ${y}Q${x-32} ${y-16} ${x-14} ${y-14}Q${x-6} ${y-30} ${x+10} ${y-18}Q${x+30} ${y-22} ${x+28} ${y}Z`;}
+function house(x,y){return `M${x-13} ${y+11}L${x-13} ${y-3}L${x} ${y-15}L${x+13} ${y-3}L${x+13} ${y+11}ZM${x-4} ${y+11}L${x-4} ${y+2}L${x+4} ${y+2}L${x+4} ${y+11}`;}
+function chasm(x,y,r,R){
+  const pts=[];for(let i=0;i<9;i++){const a=i/9*6.283,d=r*(.72+R()*.28);pts.push(`${Math.round(x+Math.cos(a)*d)} ${Math.round(y+Math.sin(a)*d*.7)}`);}
+  return `M${pts.join('L')}ZM${x-r*.4} ${y-r*.15}L${x-r*.2} ${y+r*.2}M${x-r*.05} ${y-r*.2}L${x+r*.15} ${y+r*.18}M${x+r*.3} ${y-r*.12}L${x+r*.48} ${y+r*.12}`;
+}
+function townSVG(t){
+  const {x,y}=t,hs=[[-48,-22],[0,-42],[48,-20],[-34,30],[40,32]];
+  return `<path class="ink" d="${hs.map(([dx,dy])=>house(x+dx,y+dy)).join('')}M${x-9} ${y+4}a9 5 0 1 0 18 0a9 5 0 1 0 -18 0"/><text class="wlabel" x="${x}" y="${y+80}">${t.name}</text>`;
+}
+function templarSVG(x,y){
+  let d=`M${x-70} ${y+40}L${x-70} ${y-20}L${x-55} ${y-20}L${x-55} ${y-55}L${x-35} ${y-55}L${x-35} ${y-20}L${x+35} ${y-20}L${x+35} ${y-55}L${x+55} ${y-55}L${x+55} ${y-20}L${x+70} ${y-20}L${x+70} ${y+40}Z`;
+  d+=`M${x-10} ${y+40}L${x-10} ${y+18}Q${x} ${y+6} ${x+10} ${y+18}L${x+10} ${y+40}`;
+  for(const dx of [-55,-45,-35,35,45,55])d+=`M${x+dx} ${y-55}L${x+dx} ${y-63}`;
+  d+=`M${x} ${y-20}L${x} ${y-76}L${x+26} ${y-76}L${x+26} ${y-57}L${x} ${y-57}`;
+  return `<path class="ink" d="${d}"/><path class="ink red" d="M${x+13} ${y-73}L${x+13} ${y-60}M${x+7} ${y-67}L${x+19} ${y-67}"/><text class="wlabel" x="${x}" y="${y+78}">Castillo templario</text>`;
+}
+/* Generador con semilla: cada zona sale siempre igual */
+function rng(seed){return()=>{seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function genZone(zx,zy){
+  const b=biomeOf(zx,zy),R=rng((zx+11)*7919+(zy+11)*104729),ox=zx*ZW,oy=zy*ZH;
+  const ri=(a,c)=>a+Math.floor(R()*(c-a+1));
+  let ink='',soft='',extra='',grass=0;const keep=[],blk=[],slow=[];
+  const ok=(x,y,r)=>!keep.some(k=>dist({x,y},k)<k.r+r)&&!blk.some(k=>dist({x,y},k)<k.r+r+25)&&!slow.some(k=>dist({x,y},k)<k.r+r);
+  /* Lejos de los bordes de la zona, así siempre se puede pasar de una a otra */
+  const place=r=>{for(let i=0;i<40;i++){const x=Math.round(ox+40+r+R()*(ZW-80-2*r)),y=Math.round(oy+40+r+R()*(ZH-80-2*r));if(ok(x,y,r))return {x,y};}return null;};
+  const addRock=r=>{const p=place(r);if(p){ink+=rock(p.x,p.y,r);blk.push({x:p.x,y:p.y,r:r*.85});}};
+  const addForest=(n,rad)=>{const p=place(rad);if(!p)return;const tr=[];
+    for(let i=0;i<n;i++){const a=R()*6.283,d=Math.sqrt(R())*rad*.85;tr.push([Math.round(p.x+Math.cos(a)*d),Math.round(p.y+Math.sin(a)*d),ri(14,28)]);}
+    tr.sort((a,c)=>a[1]-c[1]);ink+=tr.map(t=>tree(...t)).join('');slow.push({x:p.x,y:p.y,r:rad});};
+  if(zx===0&&zy===0){
+    keep.push({x:WORLD.castle.x,y:WORLD.castle.y,r:120});
+    ink+='M105 355L107 296L127 290L128 207L172 203L174 262L205 263L207 300L235 305L232 358M101 362L232 360M157 360L157 327L181 327L181 358M140 203L140 192M152 203L152 192M164 203L164 192';
+    ZONE0.forests.forEach(f=>{ink+=f.trees.map(t=>tree(...t)).join('');slow.push({x:f.x,y:f.y,r:f.r});});
+    ZONE0.rocks.forEach(r=>{ink+=rock(r.x,r.y,r.r);blk.push({x:r.x,y:r.y,r:r.r*.85});});
+    ZONE0.spawns.forEach(p=>WORLD.spawns.push({...p,biome:b}));grass=40;
+  }else{
+    const town=WORLD.towns.find(t=>t.zone===zx+','+zy);
+    if(town){keep.push({x:town.x,y:town.y,r:150});extra+=townSVG(town);}
+    if(b==='templario'){const x=ox+450,y=oy+400;keep.push({x,y,r:140});blk.push({x,y,r:70});extra+=templarSVG(x,y);}
+    if(b==='pradera'){for(let i=ri(1,2);i;i--)addForest(ri(4,7),ri(60,85));for(let i=ri(2,3);i;i--)addRock(ri(24,40));grass=30;}
+    if(b==='bosque'){for(let i=ri(3,5);i;i--)addForest(ri(7,12),ri(80,110));addRock(ri(24,34));grass=12;}
+    if(b==='montana'){for(let i=ri(3,5);i;i--){const r=ri(55,85),p=place(r);if(p){ink+=mountain(p.x,p.y,r);blk.push({x:p.x,y:p.y,r:r*.75});if(R()<.45)ink+=mine(p.x+ri(-20,20),Math.round(p.y+r*.55));}}
+      addRock(ri(20,32));addRock(ri(20,32));grass=6;}
+    if(b==='desierto'){for(let i=0;i<10;i++){const x=Math.round(ox+60+R()*(ZW-120)),y=Math.round(oy+60+R()*(ZH-120));if(ok(x,y,30))soft+=dune(x,y,ri(30,55));}
+      for(let i=ri(5,8);i;i--){const p=place(14);if(p){ink+=cactus(p.x,p.y);blk.push({x:p.x,y:p.y,r:10});}}addRock(ri(20,30));}
+    if(b==='acantilado'){for(let i=ri(2,4);i;i--){const r=ri(50,75),p=place(r);if(p){ink+=chasm(p.x,p.y,r,R);blk.push({x:p.x,y:p.y,r:r*.7});}}
+      for(let i=0;i<3;i++)soft+=cloud(Math.round(ox+60+R()*(ZW-120)),Math.round(oy+60+R()*(ZH-120)));addRock(ri(20,30));grass=10;}
+    if(b==='templario'){addRock(ri(24,36));addRock(ri(24,36));grass=10;}
+    for(let i=0;i<2;i++){const p=place(30);if(p&&!WORLD.towns.some(t=>dist(p,t)<260))WORLD.spawns.push({...p,biome:b});}
+  }
+  for(let i=0;i<grass;i++){const x=Math.round(ox+20+R()*(ZW-40)),y=Math.round(oy+20+R()*(ZH-40));if(ok(x,y,8))soft+=`M${x-4} ${y-5}L${x} ${y}L${x+5} ${y-7}`;}
+  WORLD.blockers.push(...blk);WORLD.slow.push(...slow);
+  return `<g class="zone" data-z="${zx},${zy}" style="display:none"><rect x="${ox}" y="${oy}" width="${ZW}" height="${ZH}" fill="${BIOMES[b].tint}"/><path class="ink soft" d="${soft}"/><path class="ink" d="${ink}"/>${extra}</g>`;
+}
 function buildWorld(){
-  let grass='';const rnd=(()=>{let s=7;return()=>(s=(s*9301+49297)%233280)/233280;})();
-  for(let i=0;i<46;i++){const x=30+rnd()*840,y=30+rnd()*770;
-    if(dist({x,y},WORLD.castle)<110||WORLD.rocks.some(r=>dist({x,y},r)<r.r+20)||WORLD.forests.some(f=>dist({x,y},f)<f.r))continue;
-    grass+=`M${x-4} ${y-5}L${x} ${y}L${x+5} ${y-7}`;}
-  const castle='M105 355L107 296L127 290L128 207L172 203L174 262L205 263L207 300L235 305L232 358M101 362L232 360M157 360L157 327L181 327L181 358M140 203L140 192M152 203L152 192M164 203L164 192';
-  $('world-svg').innerHTML=`
-    <path class="ink soft" d="${grass}"/>
-    <path class="ink" d="${castle}"/>
-    ${WORLD.forests.map(f=>`<path class="ink" d="${f.trees.map(t=>tree(...t)).join('')}"/>`).join('')}
-    ${WORLD.rocks.map(r=>`<path class="ink" d="${rock(r.x,r.y,r.r)}"/>`).join('')}
+  WORLD.blockers=[];WORLD.slow=[];WORLD.spawns=[];let h='';
+  for(let zy=-ZR;zy<=ZR;zy++)for(let zx=-ZR;zx<=ZR;zx++)h+=genZone(zx,zy);
+  $('world-svg').innerHTML=`<g id="w-terrain">${h}</g>
     <polyline id="w-trail" class="trail" points=""/>
     <path id="w-aim" class="aim" d=""/>
     <g id="w-enemies"></g>
     <g id="w-party"></g>`;
-  renderPartyGlyph();
+  W.zoneKey=null;renderPartyGlyph();
 }
+/* Cámara: sigue al equipo solo cuando entra en la franja del borde */
+function updateCam(){
+  const c=W.cam,p=W.p;
+  if(p.x<c.x+CAM_M)c.x=p.x-CAM_M;if(p.x>c.x+VW-CAM_M)c.x=p.x-VW+CAM_M;
+  if(p.y<c.y+CAM_M)c.y=p.y-CAM_M;if(p.y>c.y+VH-CAM_M)c.y=p.y-VH+CAM_M;
+  c.x=Math.max(WORLD.minX,Math.min(WORLD.maxX-VW,c.x));c.y=Math.max(WORLD.minY,Math.min(WORLD.maxY-VH,c.y));
+}
+function snapCam(){W.cam={x:Math.floor(W.p.x/ZW)*ZW,y:Math.floor(W.p.y/ZH)*ZH};updateCam();}
 function renderPartyGlyph(){
   const n=P.party.length,dots=P.party.map((id,i)=>`<circle cx="${(i-(n-1)/2)*11}" cy="-22" r="4.5" fill="${hero(id).color}" stroke="#2a2a2a" stroke-width="1.5"/>`).join('');
   $('w-party').innerHTML=`<circle r="13" fill="#2a2a2a"/><circle r="7" fill="none" stroke="#f4f1e8" stroke-width="2"/>${dots}<title>Tu equipo</title>`;
@@ -377,24 +474,24 @@ function enemyGlyph(g){
   return `<g class="eg" data-g="${g.id}"><circle r="12" fill="#f4f1e8" stroke="#b3262d" stroke-width="3"/><path d="M-5 -5L5 5M5 -5L-5 5" stroke="#b3262d" stroke-width="3" stroke-linecap="round"/>${dots}${g.star?'<path d="M0 -38L2.6 -32.6L8.5 -31.8L4.2 -27.7L5.3 -21.9L0 -24.7L-5.3 -21.9L-4.2 -27.7L-8.5 -31.8L-2.6 -32.6Z" transform="translate(0 -6) scale(1.15)" fill="#e6b422" stroke="#2a2a2a" stroke-width="1.5" stroke-linejoin="round"/>':''}<text class="bang" x="12" y="-14">!</text><title>Patrulla: ${g.members.map(id=>hero(id).name).join(', ')}${g.star?` · ⭐ ${hero(g.star).name} se puede sumar`:''}</title></g>`;
 }
 function spawnGroup(){
-  const opts=WORLD.spawns.filter(s=>dist(s,W.p)>260&&!W.groups.some(g=>dist(g.home,s)<80));if(!opts.length)return;
-  const s=pick(opts),n=Math.random()<.5?2:3;
-  /* Una de cada 4, más o menos, la lidera un personaje único que todavía no tenés: la patrulla con ⭐ */
-  const taken=new Set(W.groups.map(g=>g.star)),free=HEROES.filter(h=>!P.owned[h.id]&&!taken.has(h.id));
+  const opts=WORLD.spawns.filter(s=>{const d=dist(s,W.p);return d>480&&d<1150&&!W.groups.some(g=>dist(g.home,s)<220);});if(!opts.length)return;
+  const s=pick(opts),bio=BIOMES[s.biome],n=bio.size||(Math.random()<.5?2:3);
+  /* Más o menos una de cada 4 la lidera un personaje único de esa zona que todavía no tenés: la patrulla con ⭐ */
+  const taken=new Set(W.groups.map(g=>g.star)),free=HEROES.filter(h=>bio.stars.includes(h.id)&&!P.owned[h.id]&&!taken.has(h.id));
   const star=free.length&&Math.random()<.25?pick(free).id:null;
-  const members=Array.from({length:star?n-1:n},()=>pick(FOES).id);if(star)members.unshift(star);
-  W.groups.push({id:W.gid++,x:s.x,y:s.y,home:{...s},to:null,tt:0,pause:Math.random()*2,chasing:false,members,star});
+  const members=Array.from({length:star?n-1:n},()=>pick(bio.foes));if(star)members.unshift(star);
+  W.groups.push({id:W.gid++,x:s.x,y:s.y,home:{x:s.x,y:s.y},biome:s.biome,to:null,tt:0,pause:Math.random()*2,chasing:false,members,star});
 }
-const inForest=o=>WORLD.forests.some(f=>dist(o,f)<f.r);
+const inForest=o=>WORLD.slow.some(f=>dist(o,f)<f.r);
 function moveToward(o,t,sp){const d=dist(o,t);if(d<=sp){o.x=t.x;o.y=t.y;return true;}o.x+=(t.x-o.x)/d*sp;o.y+=(t.y-o.y)/d*sp;return false;}
 function collide(o){
-  for(const r of WORLD.rocks){const d=dist(o,r)||.01,m=r.r*.85+10;if(d<m){o.x=r.x+(o.x-r.x)/d*m;o.y=r.y+(o.y-r.y)/d*m;}}
-  o.x=Math.min(WORLD.w-15,Math.max(15,o.x));o.y=Math.min(WORLD.h-15,Math.max(15,o.y));
+  for(const r of WORLD.blockers){if(Math.abs(o.x-r.x)>r.r+12||Math.abs(o.y-r.y)>r.r+12)continue;const d=dist(o,r)||.01,m=r.r+10;if(d<m){o.x=r.x+(o.x-r.x)/d*m;o.y=r.y+(o.y-r.y)/d*m;}}
+  o.x=Math.min(WORLD.maxX-15,Math.max(WORLD.minX+15,o.x));o.y=Math.min(WORLD.maxY-15,Math.max(WORLD.minY+15,o.y));
 }
 function wlog(m){W.log.unshift(m);W.log=W.log.slice(0,30);if(screen==='world')$('wlog').innerHTML=W.log.map(l=>`<li>${l}</li>`).join('');}
-function restAtCastle(){
+function restAtTown(t){
   let healed=false;for(const id in P.owned){const mx=heroStats(hero(id)).hp;if(P.owned[id].hp<mx){P.owned[id].hp=mx;healed=true;}}
-  if(healed){wlog('🏰 Descansan en el castillo: todos recuperan la vida.');persist();renderWorldPanel();}
+  wlog(`${t.icon} ${t.id==='castle'?'Llegan al castillo':'Llegan a '+t.name}${healed?': todos recuperan la vida':''}. Desde acá se usa el cuartel.`);persist();
 }
 function step(dt){
   W.grace=Math.max(0,W.grace-dt);
@@ -402,8 +499,9 @@ function step(dt){
     if(moveToward(W.p,W.target,sp))W.target=null;collide(W.p);
     if(W.target&&Math.hypot(W.p.x-ox,W.p.y-oy)<sp*.2)W.target=null; /* trabado contra una roca */
     const lt=W.trail[W.trail.length-1];if(!lt||dist(lt,W.p)>14){W.trail.push({x:W.p.x,y:W.p.y});if(W.trail.length>36)W.trail.shift();}}
-  const inC=dist(W.p,WORLD.castle)<WORLD.castle.r;if(inC!==W.inCastle){W.inCastle=inC;if(inC)restAtCastle();renderWorldPanel();}
-  const safe=dist(W.p,WORLD.castle)<95;
+  const tw=townAt(W.p);
+  if((tw&&tw.id)!==(W.town&&W.town.id)){W.town=tw;W.inCastle=!!tw;if(tw){P.home=tw.id;restAtTown(tw);}renderWorldPanel();}
+  const safe=WORLD.towns.some(t=>dist(W.p,t)<95);
   for(const g of W.groups){
     g.chasing=!W.grace&&!safe&&dist(g,W.p)<170;
     if(g.chasing)moveToward(g,W.p,78*(inForest(g)?.55:1)*dt);
@@ -411,12 +509,20 @@ function step(dt){
     else{if(!g.to){const a=Math.random()*Math.PI*2,r=30+Math.random()*90;g.to={x:g.home.x+Math.cos(a)*r,y:g.home.y+Math.sin(a)*r};g.tt=0;}
       g.tt+=dt;if(moveToward(g,g.to,40*(inForest(g)?.55:1)*dt)||g.tt>6){g.to=null;g.pause=1+Math.random()*2.5;}}
     collide(g);
-    const dc=dist(g,WORLD.castle)||.01;if(dc<115){g.x=WORLD.castle.x+(g.x-WORLD.castle.x)/dc*115;g.y=WORLD.castle.y+(g.y-WORLD.castle.y)/dc*115;g.to=null;}
+    for(const t of WORLD.towns){const dc=dist(g,t)||.01;if(dc<115){g.x=t.x+(g.x-t.x)/dc*115;g.y=t.y+(g.y-t.y)/dc*115;g.to=null;}}
     if(!W.grace&&!safe&&dist(g,W.p)<24){startBattle(g);return;}
   }
-  W.respawn+=dt;if(W.respawn>18){W.respawn=0;if(W.groups.length<4)spawnGroup();}
+  /* Las patrullas muy lejanas se van y aparecen nuevas cerca del equipo */
+  W.groups=W.groups.filter(g=>dist(g,W.p)<1700);
+  W.respawn+=dt;if(W.respawn>3){W.respawn=0;if(W.groups.length<6)spawnGroup();}
 }
 function drawWorld(){
+  if(W.camSnap){W.camSnap=false;snapCam();}else updateCam();
+  const c=W.cam;$('world-svg').setAttribute('viewBox',`${Math.round(c.x)} ${Math.round(c.y)} ${VW} ${VH}`);
+  const ax=Math.floor(c.x/ZW),ay=Math.floor(c.y/ZH),zk=ax+','+ay;
+  if(zk!==W.zoneKey){W.zoneKey=zk;document.querySelectorAll('#w-terrain .zone').forEach(g=>{const [zx,zy]=g.dataset.z.split(',').map(Number);g.style.display=zx>=ax&&zx<=ax+1&&zy>=ay&&zy<=ay+1?'':'none';});}
+  const pzx=Math.floor(W.p.x/ZW),pzy=Math.floor(W.p.y/ZH),label=`X ${pzx} · Y ${-pzy} · ${BIOMES[biomeOf(pzx,pzy)].name}${W.town&&W.town.id!=='castle'?' · '+W.town.name:''}`;
+  if(label!==W.coordLabel){W.coordLabel=label;$('coords').textContent=label;}
   $('w-trail').setAttribute('points',W.trail.map(p=>`${p.x|0},${p.y|0}`).join(' '));
   const t=W.target;$('w-aim').setAttribute('d',t?`M${W.p.x} ${W.p.y}L${t.x} ${t.y}M${t.x-6} ${t.y-6}L${t.x+6} ${t.y+6}M${t.x+6} ${t.y-6}L${t.x-6} ${t.y+6}`:'');
   $('w-party').setAttribute('transform',`translate(${W.p.x} ${W.p.y})`);
@@ -428,7 +534,7 @@ let last=0;
 function tick(t){const dt=Math.min(.05,(t-last)/1000||0);last=t;if(screen==='world'){step(dt);if(screen==='world')drawWorld();}requestAnimationFrame(tick);}
 $('world-svg').addEventListener('pointerdown',e=>{
   if(screen!=='world')return;const pt=new DOMPoint(e.clientX,e.clientY).matrixTransform($('world-svg').getScreenCTM().inverse());
-  W.target={x:Math.min(WORLD.w-15,Math.max(15,pt.x)),y:Math.min(WORLD.h-15,Math.max(15,pt.y))};
+  W.target={x:Math.min(WORLD.maxX-15,Math.max(WORLD.minX+15,pt.x)),y:Math.min(WORLD.maxY-15,Math.max(WORLD.minY+15,pt.y))};
 });
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&screen==='world')persist();});
 
@@ -455,8 +561,8 @@ function renderWorldPanel(){
   $('res-count').textContent=`viajan ${P.carry.length}/${CARRY_MAX}`;
   const bk=barracks();$('coll-count').textContent=`colección ${Object.keys(P.owned).length}/${HEROES.length}`;
   $('barracks').innerHTML=W.inCastle
-    ?(bk.map(id=>heroCard(id,'barracks')).join('')||'<p class="hint">No queda nadie en el castillo: viajan todos.</p>')
-    :`<p class="hint">🏰 ${bk.length?`${bk.length} te ${bk.length>1?'esperan':'espera'}`:'Nadie te espera'} en el castillo. Pasá por ahí para cambiar quién viaja.</p>`;
+    ?(bk.map(id=>heroCard(id,'barracks')).join('')||'<p class="hint">No queda nadie en el cuartel: viajan todos.</p>')
+    :`<p class="hint">🏰 ${bk.length?`${bk.length} te ${bk.length>1?'esperan':'espera'}`:'Nadie te espera'} en el cuartel. Pasá por el castillo o un pueblo para cambiar quién viaja.</p>`;
   $('wlog').innerHTML=W.log.map(l=>`<li>${l}</li>`).join('');
   renderPartyGlyph();
 }
@@ -470,7 +576,7 @@ $('world-panel').addEventListener('click',e=>{
   else return;
   persist();renderWorldPanel();
 });
-$('btn-reset').onclick=()=>{if(!confirm('¿Borrar la colección y empezar de cero?'))return;P=freshSave();W=freshWorld();for(let i=0;i<4;i++)spawnGroup();persist();wlog('Arranca una nueva aventura.');renderWorldPanel();};
+$('btn-reset').onclick=()=>{if(!confirm('¿Borrar la colección y empezar de cero?'))return;P=freshSave();W=freshWorld();buildWorld();for(let i=0;i<6;i++)spawnGroup();drawWorld();persist();wlog('Arranca una nueva aventura.');renderWorldPanel();};
 
 /* ---- Retratos: pixel art armado con rectángulos y contorno automático; caras sin rasgos a propósito ---- */
 const SPR_W=20,SPR_H=26,spriteCache={};
@@ -546,17 +652,23 @@ function makeUnit(h,team,x,y,hp){const s=heroStats(h);return {id:uid++,heroId:h.
 
 /* Isla de combate al azar: bordes mordidos, algún hueco, a veces un arroyo y obstáculos sueltos.
    Se reintenta hasta que todas las salidas queden conectadas a pie. */
-const PALETTES=[['#8fcb5e','#82bf53'],['#c9a08b','#bb937e'],['#a8c96a','#9bbd5e'],['#d6c27a','#c9b56c'],['#9fc7a0','#91ba92']];
-const ISLAND_NAMES=['Isla salvaje','El claro','Los peñascos','La loma','El islote','Tierra rota','El bajo'];
-function genMap(){
-  const ri=n=>Math.floor(Math.random()*n);
+const BATTLE={
+  pradera:{pals:[['#8fcb5e','#82bf53'],['#a8c96a','#9bbd5e'],['#9fc7a0','#91ba92']],obst:'TTHWoopp',rate:.18,holes:2,water:.35,names:['Isla salvaje','El claro','La loma','El islote','El bajo']},
+  bosque:{pals:[['#7fb85a','#73ab4f'],['#8fc06a','#82b35e']],obst:'TTTTTop',rate:.26,holes:1,water:.25,names:['La espesura','Claro del bosque','El bosque viejo']},
+  montana:{pals:[['#b9b3a6','#aea898'],['#c4b8a4','#b8ac97']],obst:'RRRTW',rate:.2,holes:3,water:.1,names:['Boca de la mina','El paso','Las rocas']},
+  desierto:{pals:[['#e3c98a','#d8bd7e'],['#e8d29a','#dcc58c']],obst:'CCCRo',rate:.16,holes:2,water:.08,names:['Las dunas','El oasis','Arena caliente']},
+  acantilado:{pals:[['#a9c7b4','#9bbaa6'],['#b5cfa8','#a8c29b']],obst:'RTo',rate:.12,holes:6,water:.1,names:['El acantilado','Borde del cielo','Las grietas']},
+  templario:{pals:[['#c9c2b8','#bdb5aa']],obst:'HHWRp',rate:.18,holes:2,water:.1,names:['Patio templario','Las murallas']}
+};
+function genMap(biome){
+  const ri=n=>Math.floor(Math.random()*n),cfg=BATTLE[biome]||BATTLE.pradera;
   for(let tries=0;tries<80;tries++){
     const w=6+ri(3),h=8+ri(3),g=Array.from({length:h},()=>Array(w).fill('.'));
     for(let y=0;y<h;y++){if(Math.random()<.35)g[y][0]='#';if(Math.random()<.35)g[y][w-1]='#';
       if(Math.random()<.15&&g[y][0]==='#')g[y][1]='#';if(Math.random()<.15&&g[y][w-1]==='#')g[y][w-2]='#';}
-    for(let i=ri(3);i>0;i--){const x=1+ri(w-2),y=3+ri(h-6);g[y][x]='#';if(Math.random()<.5&&x+1<w-1)g[y][x+1]='#';}
-    if(Math.random()<.35){const y=3+ri(h-6);for(let x=0;x<w;x++)if(g[y][x]==='.'&&Math.random()<.75)g[y][x]='~';}
-    for(let y=2;y<h-2;y++)for(let x=0;x<w;x++)if(g[y][x]==='.'&&Math.random()<.18)g[y][x]=pick('TTHWoopp');
+    for(let i=ri(cfg.holes+1);i>0;i--){const x=1+ri(w-2),y=3+ri(h-6);g[y][x]='#';if(Math.random()<.5&&x+1<w-1)g[y][x+1]='#';}
+    if(Math.random()<cfg.water){const y=3+ri(h-6);for(let x=0;x<w;x++)if(g[y][x]==='.'&&Math.random()<.75)g[y][x]='~';}
+    for(let y=2;y<h-2;y++)for(let x=0;x<w;x++)if(g[y][x]==='.'&&Math.random()<cfg.rate)g[y][x]=pick(cfg.obst);
     const free=ys=>shuffle(ys.flatMap(y=>g[y].map((c,x)=>c==='.'?[x,y]:null).filter(Boolean)));
     const s2=free([0,1]).slice(0,3),s1=free([h-2,h-1]).slice(0,3);if(s1.length<3||s2.length<3)continue;
     s2.forEach(([x,y])=>g[y][x]='2');s1.forEach(([x,y])=>g[y][x]='1');
@@ -564,14 +676,14 @@ function genMap(){
     while(q.length){const [x,y]=q.shift();for(const [dx,dy] of DIRS){const nx=x+dx,ny=y+dy,k=nx+','+ny;
       if(ny>=0&&ny<h&&nx>=0&&nx<w&&!seen.has(k)&&ok(g[ny][nx])){seen.add(k);q.push([nx,ny]);}}}
     if(![...s1,...s2].every(p=>seen.has(p.join())))continue;
-    const [g1,g2]=pick(PALETTES);
-    return {name:pick(ISLAND_NAMES),g1,g2,rows:g.map(r=>r.join(''))};
+    const [g1,g2]=pick(cfg.pals);
+    return {name:pick(cfg.names),g1,g2,rows:g.map(r=>r.join(''))};
   }
   return pick(MAPS);
 }
 function startBattle(g){
   screen='battle';W.target=null;W.battleGroup=g;persist();
-  const map=Math.random()<.75?genMap():pick(MAPS);
+  const bio=g.biome||'pradera',map=bio==='pradera'&&Math.random()<.25?pick(MAPS):genMap(bio);
   G={map,W:Math.max(...map.rows.map(r=>r.length)),H:map.rows.length,units:[],turn:1,actions:ACTIONS,sel:null,mode:null,log:[],winner:null,round:1,busy:false,recruit:null};
   const spots=t=>{const s=[];map.rows.forEach((r,y)=>[...r].forEach((c,x)=>{if(c===String(t))s.push([x,y]);}));return s;};
   const s1=spots(1),s2=spots(2);
@@ -589,18 +701,19 @@ function resolveBattle(w){
   const g=W.battleGroup;
   if(w===1){
     syncPartyHp();W.groups=W.groups.filter(x=>x!==g);
-    G.gold=6+4*g.members.length+(g.star?15:0)+Math.floor(Math.random()*6);P.gold+=G.gold;
+    G.gold=6+4*g.members.length+(g.star?15:0)+(BIOMES[g.biome||'pradera'].gold||0)+Math.floor(Math.random()*6);P.gold+=G.gold;
     if(g.star&&!P.owned[g.star]){const id=g.star;P.owned[id]={hp:heroStats(hero(id)).hp};G.recruit=id;
       G.recruitTravels=P.carry.length<CARRY_MAX;if(G.recruitTravels)P.carry.push(id);
-      log(`🤝 ${hero(id).name} se suma ${G.recruitTravels?'a tu reserva':'y te espera en el castillo'}.`);}
+      log(`🤝 ${hero(id).name} se suma ${G.recruitTravels?'a tu reserva':'y te espera en el cuartel'}.`);}
     P.streak++;
     log(`🪙 +${G.gold} de oro.`);
     wlog(`⚔️ Victoria en ${G.map.name} (🔥 ${P.streak} invicto${P.streak>1?'s':''}, 🪙 +${G.gold}).${G.recruit?` ${hero(G.recruit).name} se unió.`:''}`);
   }else{
     for(const id in P.owned)P.owned[id].hp=heroStats(hero(id)).hp;
-    W.p={...WORLD.start};W.trail=[];W.inCastle=true;P.streak=0;
+    const home=WORLD.towns.find(t=>t.id===P.home)||WORLD.towns[0];G.home=home.name;
+    W.p={...home.start};W.trail=[];W.town=home;W.inCastle=true;W.camSnap=true;P.streak=0;
     G.goldLost=P.gold-Math.floor(P.gold/2);P.gold-=G.goldLost;
-    wlog(`💀 Derrota. El equipo vuelve al castillo y se recupera. Invictos a 0${G.goldLost?` y se pierden 🪙 ${G.goldLost}`:''}.`);
+    wlog(`💀 Derrota. El equipo vuelve a ${home.name} y se recupera. Invictos a 0${G.goldLost?` y se pierden 🪙 ${G.goldLost}`:''}.`);
   }
   W.grace=2.5;persist();
 }
@@ -626,7 +739,7 @@ function reachable(u){
   return out;
 }
 /* Tiro de a hacia b: -1 si lo tapa un árbol, casa o pozo; si no, cuántas fichas, arbustos o calabazas hay en el medio */
-const SOFT_COVER=new Set(['o','p']);
+const SOFT_COVER=new Set(['o','p','C']);
 function lineCover(a,b){
   const dx=b.x-a.x,dy=b.y-a.y,n=Math.max(Math.abs(dx),Math.abs(dy))*8,seen=new Set();let cover=0;
   for(let i=1;i<n;i++){const t=i/n,cx=Math.round(a.x+dx*t),cy=Math.round(a.y+dy*t),k=cx+','+cy;
@@ -798,8 +911,8 @@ function render(){
   if(G.winner){
     const r=G.recruit?hero(G.recruit):null;
     up.innerHTML=`<div class="result">${G.winner===1
-      ?`<p class="hint">La patrulla quedó fuera de combate: 🪙 +${G.gold} de oro. Quien cayó vuelve al mapa con 1 ❤️.</p>${r?`<div class="unit-head"><span class="dot" style="--c:${r.color}"></span><div><b>🤝 ${r.name} se suma</b><br><small>${CLASSES[r.cls].name}${modText(r)?' · '+modText(r):''} · ${G.recruitTravels?'ya viaja en tu reserva':'te espera en el castillo (llevás 6)'}</small></div></div>`:''}`
-      :`<p class="hint">El equipo vuelve al castillo con la vida llena${G.goldLost?`, pero se pierde la mitad del oro (🪙 −${G.goldLost})`:''}.</p>`}
+      ?`<p class="hint">La patrulla quedó fuera de combate: 🪙 +${G.gold} de oro. Quien cayó vuelve al mapa con 1 ❤️.</p>${r?`<div class="unit-head"><span class="dot" style="--c:${r.color}"></span><div><b>🤝 ${r.name} se suma</b><br><small>${CLASSES[r.cls].name}${modText(r)?' · '+modText(r):''} · ${G.recruitTravels?'ya viaja en tu reserva':'te espera en el cuartel (llevás 6)'}</small></div></div>`:''}`
+      :`<p class="hint">El equipo vuelve a ${G.home} con la vida llena${G.goldLost?`, pero se pierde la mitad del oro (🪙 −${G.goldLost})`:''}.</p>`}
       <button class="btn red" id="btn-back">Volver al mapa</button></div>`;
     $('btn-back').onclick=backToWorld;
   }
@@ -827,7 +940,7 @@ $('btn-end').onclick=()=>{if(!G.busy&&G.turn===1&&!G.winner){endTurn();render();
 $('btn-flee').onclick=flee;
 
 buildWorld();
-for(let i=0;i<4;i++)spawnGroup();
+for(let i=0;i<6;i++)spawnGroup();
 wlog('Tu equipo sale del castillo. Tocá el mapa para moverte.');
 renderWorldPanel();showScreen();drawWorld();
 requestAnimationFrame(tick);

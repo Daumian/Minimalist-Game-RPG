@@ -4,11 +4,16 @@ Cómo jugar: abrí index.html con doble clic en cualquier navegador (no necesita
 salvo para cargar las tipografías; sin conexión usa unas de reemplazo).
 
 Mapa del mundo:
-- Tocá el mapa para mover a tu equipo. Los bosques frenan, las rocas no se atraviesan.
+- Tocá el mapa para mover a tu equipo. Los bosques frenan; rocas, montañas, grietas y cactus no se atraviesan.
+- El mundo tiene 7x7 zonas. Al acercarte al borde de la pantalla, el mapa se mueve. Arriba se ve la zona: X, Y y tipo.
+- Zonas: pradera (alrededor del castillo), bosque al norte, montañas y minas al este, desierto al sur,
+  acantilados al oeste y dos castillos templarios en las esquinas. Cada una tiene sus rivales y su mapa de combate.
+- Personajes por zona (patrullas con ⭐): arqueros en el bosque, soldados en las montañas, voladores en los acantilados.
 - Las patrullas rivales deambulan y te persiguen si te acercás. Si te alcanzan, se pelea.
-- El castillo es zona segura: ahí no entran y tu equipo recupera toda la vida.
+- El castillo y los pueblos son zona segura: ahí no entran, tu equipo recupera toda la vida y se usa el cuartel.
+  Si perdés, volvés al último castillo o pueblo que visitaste.
 - De viaje llevás hasta 6 personajes: 3 en el equipo activo y el resto en la reserva.
-  Los demás de tu colección te esperan en el castillo; ahí podés cambiar quién viaja.
+  Los demás de tu colección esperan en el cuartel (castillo o cualquier pueblo); ahí podés cambiar quién viaja.
 - Las patrullas comunes no dan personajes. Las que tienen ⭐ las lidera un personaje único: si las vencés,
   se suma (a la reserva, o al castillo si ya llevás 6). Cada personaje se consigue una sola vez.
 - Cada victoria da oro al grupo (más si la patrulla tenía ⭐). Al perder se pierde la mitad.
@@ -24,7 +29,9 @@ Combate (vos contra la máquina):
 - Stats: Vida, Movimiento, % ataque cerca, daño cerca, % ataque lejos, distancia lejos y daño lejos.
 - Se tira un dado de 100: si sale igual o menos que el % de ataque, es impacto y saca el daño correspondiente.
 - Del 1 al 5 es crítico (+1 daño).
-- Árboles, casas y pozos tapan la vista. Cada ficha, calabaza o arbusto en el medio resta 10% al tiro.
+- Árboles, casas, pozos y rocas tapan la vista. Cada ficha, calabaza, arbusto o cactus en el medio resta 10% al tiro.
+- Habilidades: Liderazgo (Bruno), Curar (Lía), Picada (Pico, Rayo), Carga (Toro), Escudo (Muro),
+  Tiro rasante (Ojo), Veneno (Aguja), Garras (Zarpa). Las de acción tienen botón propio.
 - Los mapas de combate se generan al azar (a veces sale uno de los hechos a mano).
 
 El progreso (colección, equipo y posición) se guarda en el navegador.
