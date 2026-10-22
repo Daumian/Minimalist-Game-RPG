@@ -45,6 +45,10 @@ header p{margin:0;color:var(--muted)}
 .cell .ob{font-size:clamp(18px,5.2vw,36px);line-height:1;filter:drop-shadow(0 3px 0 rgba(0,0,0,.25))}
 .cell.mv::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,.38);box-shadow:inset 0 0 0 2px rgba(255,255,255,.7)}
 .cell.atk::after{content:"";position:absolute;inset:0;background:rgba(227,54,62,.22)}
+.cell.heal .tok{box-shadow:0 0 0 3px var(--good),0 0 0 7px rgba(63,191,110,.4)}
+.tok .psn{position:absolute;top:-7px;right:-7px;font-size:13px;z-index:2}
+.abil{margin:0;font-size:13.5px;color:var(--muted);line-height:1.4}
+.abil b{color:var(--ink)}
 .cell.tg .tok{box-shadow:0 0 0 3px var(--target),0 0 0 7px rgba(255,74,82,.4)}
 .tok{width:74%;height:74%;border-radius:22%;background:var(--c);display:grid;place-items:center;position:relative;z-index:1;transition:transform .15s;box-shadow:0 4px 0 rgba(0,0,0,.3)}
 .tok.j1{outline:3px solid var(--p1)} .tok.j2{outline:3px solid var(--p2)}
@@ -200,6 +204,7 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
           <li><b>Mover:</b> hasta 👟 casillas en cruz (sin diagonales), sin atravesar fichas ni obstáculos. Los <b>voladores</b> 🕊️ pasan por encima de todo.</li>
           <li><b>Cuerpo a cuerpo:</b> a un enemigo pegado, diagonales incluidas. Acierta con 👊% y saca 💥 de vida.</li>
           <li><b>A distancia:</b> a 📏 casillas o menos (contando en cruz), nunca a un enemigo pegado. Acierta con 🏹% y saca 🎯 de vida. Árboles, casas y pozos tapan la vista; cada ficha, arbusto o calabaza en el medio resta 10%.</li>
+          <li><b>Habilidades:</b> cada personaje tiene una. Las de acción (🐂 🦅 ✚ 🐾) tienen botón propio y gastan la acción de esa ficha; las pasivas (👑 🛡️ 🎯 🧪) funcionan solas.</li>
           <li><b>Tirada:</b> se tira un dado de 100. Si sale igual o menos que el %, es impacto. Del 1 al 5 es crítico (+1 daño).</li>
           <li>La vida perdida se mantiene al volver al mapa. Quien cae en una pelea ganada vuelve con 1 ❤️. Si perdés, el equipo vuelve al castillo.</li>
         </ul>
@@ -225,15 +230,15 @@ const CLASSES={
 };
 /* Colección: cada personaje es una clase con una variación chica. look = cómo se dibuja su retrato */
 const HEROES=[
-  {id:'bruno',name:'Bruno',cls:'soldado',color:'#0f9b8e',mod:{},look:{skin:'#e0ac69',hair:'#3b2a1a',weapon:'sword'}},
-  {id:'lia',name:'Lía',cls:'tirador',color:'#e0261b',mod:{},look:{skin:'#ffdbac',hair:'#a0522d',long:true}},
-  {id:'pico',name:'Pico',cls:'volador',color:'#0a6fca',mod:{},look:{skin:'#f1c27d',hair:'#e2c16b'}},
-  {id:'toro',name:'Toro',cls:'soldado',color:'#2d7a3a',mod:{hp:1,spd:-1},look:{skin:'#c68642',hair:'#2a1d14',pants:'#5a3e2b',weapon:'axe',horns:true}},
-  {id:'muro',name:'Muro',cls:'soldado',color:'#6f6f78',mod:{mdmg:1,mhit:-10},look:{skin:'#f1c27d',hair:'#8a6a3a',weapon:'sword',shield:true}},
-  {id:'ojo',name:'Ojo',cls:'tirador',color:'#d9822b',mod:{range:1,rhit:-10},look:{skin:'#c68642',hair:'#222222',hood:true}},
-  {id:'aguja',name:'Aguja',cls:'tirador',color:'#c2367a',mod:{rdmg:1,hp:-1},look:{skin:'#8d5524',hair:'#111111',hood:true,mask:true}},
-  {id:'rayo',name:'Rayo',cls:'volador',color:'#6b5bd6',mod:{spd:1,mhit:-10},look:{skin:'#e0ac69',hair:'#222222',tips:true}},
-  {id:'zarpa',name:'Zarpa',cls:'volador',color:'#8a5a2b',mod:{mhit:10,rhit:-10},look:{skin:'#8d5524',hair:'#4a3020',wing:'#a7a39a',claws:true,long:true}}
+  {id:'bruno',name:'Bruno',cls:'soldado',color:'#0f9b8e',mod:{},ability:'lider',look:{skin:'#e0ac69',hair:'#3b2a1a',weapon:'sword'}},
+  {id:'lia',name:'Lía',cls:'tirador',color:'#e0261b',mod:{},ability:'curar',look:{skin:'#ffdbac',hair:'#a0522d',long:true}},
+  {id:'pico',name:'Pico',cls:'volador',color:'#0a6fca',mod:{},ability:'picada',look:{skin:'#f1c27d',hair:'#e2c16b'}},
+  {id:'toro',name:'Toro',cls:'soldado',color:'#2d7a3a',mod:{hp:1,spd:-1},ability:'carga',look:{skin:'#c68642',hair:'#2a1d14',pants:'#5a3e2b',weapon:'axe',horns:true}},
+  {id:'muro',name:'Muro',cls:'soldado',color:'#6f6f78',mod:{mdmg:1,mhit:-10},ability:'escudo',look:{skin:'#f1c27d',hair:'#8a6a3a',weapon:'sword',shield:true}},
+  {id:'ojo',name:'Ojo',cls:'tirador',color:'#d9822b',mod:{range:1,rhit:-10},ability:'rasante',look:{skin:'#c68642',hair:'#222222',hood:true}},
+  {id:'aguja',name:'Aguja',cls:'tirador',color:'#c2367a',mod:{rdmg:1,hp:-1},ability:'veneno',look:{skin:'#8d5524',hair:'#111111',hood:true,mask:true}},
+  {id:'rayo',name:'Rayo',cls:'volador',color:'#6b5bd6',mod:{spd:1,mhit:-10},ability:'picada',look:{skin:'#e0ac69',hair:'#222222',tips:true}},
+  {id:'zarpa',name:'Zarpa',cls:'volador',color:'#8a5a2b',mod:{mhit:10,rhit:-10},ability:'garras',look:{skin:'#8d5524',hair:'#4a3020',wing:'#a7a39a',claws:true,long:true}}
 ];
 /* Rivales comunes: no se pueden sumar, solo acompañan */
 const FOES=[
@@ -241,6 +246,17 @@ const FOES=[
   {id:'arquero',name:'Arquero',cls:'tirador',color:'#5d6b4a',mod:{},look:{skin:'#c68642',hair:'#222222',hood:true}},
   {id:'cuervo',name:'Cuervo',cls:'volador',color:'#3e3e48',mod:{},look:{skin:'#e0ac69',hair:'#111111',wing:'#6a6a74'}}
 ];
+/* Habilidad mayor de cada personaje: las de acción tienen botón propio y gastan la acción; las pasivas funcionan solas */
+const ABILITIES={
+  lider:{name:'Liderazgo',icon:'👑',desc:'Los aliados pegados a él (diagonales incluidas) tienen +10% para acertar.'},
+  carga:{name:'Carga',icon:'🐂',act:true,desc:'Se mueve y pega de cerca en la misma acción.'},
+  escudo:{name:'Escudo',icon:'🛡️',desc:'Los tiros contra él o contra los aliados pegados a él tienen −10%.'},
+  curar:{name:'Curar',icon:'✚',act:true,desc:'Un aliado pegado recupera 1 ❤️.'},
+  rasante:{name:'Tiro rasante',icon:'🎯',desc:'Sus tiros ignoran la cubierta de fichas, arbustos y calabazas.'},
+  veneno:{name:'Veneno',icon:'🧪',desc:'Cuando pega, envenena: el rival pierde 1 ❤️ más al empezar su próximo turno.'},
+  picada:{name:'Picada',icon:'🦅',act:true,desc:'Vuela y pega de cerca en la misma acción.'},
+  garras:{name:'Garras',icon:'🐾',act:true,desc:'Dos ataques de cerca seguidos, cada uno con −20%.'}
+};
 const START_OWNED=['bruno','lia','pico','toro'], START_PARTY=['bruno','lia','pico'];
 /* Mapas de combate: # vacío · . pasto · 1/2 salida de cada bando · T árbol · H casa · W pozo (tapan vista) · o arbusto · p calabaza · ~ agua (solo frenan) */
 const MAPS=[
@@ -427,7 +443,7 @@ function heroCard(id,where){
   if(where!=='barracks'&&town)b.push(btn('drop','Dejar',where==='party'&&P.party.length<=1));
   if(where==='barracks')b.push(btn('take','Llevar',P.carry.length>=CARRY_MAX));
   return `<div class="hero"><button class="thumb" data-view="${id}" aria-label="Ver a ${h.name}">${spriteSVG(h,1.5)}</button>
-    <div><b>${h.name}</b> <small>${CLASSES[h.cls].name}${s.fly?' 🕊️':''}${mt?' · '+mt:''}</small>
+    <div><b>${h.name}</b> <small>${CLASSES[h.cls].name}${s.fly?' 🕊️':''}${h.ability?' · '+ABILITIES[h.ability].icon+' '+ABILITIES[h.ability].name:''}${mt?' · '+mt:''}</small>
     <div class="meta"><span class="${hp<s.hp?'hurt':''}">❤️${hp}/${s.hp}</span> 👟${s.spd} · 👊${s.mhit}% 💥${s.mdmg} · ${s.range?`🏹${s.rhit}% 📏${s.range} 🎯${s.rdmg}`:'🏹 —'}</div></div>
     <div class="btns">${b.join('')}</div></div>`;
 }
@@ -506,7 +522,7 @@ function openHero(id){
   $('dlg-body').innerHTML=`<div class="portrait">${spriteSVG(h,7)}</div>
     <div class="stack" style="gap:8px"><div><h2 class="sub">${h.name}</h2><small class="muted">${CLASSES[h.cls].name}${s.fly?' · 🕊️ vuela':''}${mt?' · '+mt:''}</small></div>
     <div class="statlist">${STATS.map(([k,ic,l])=>`<div><span>${ic} ${l}</span><b>${k==='hp'&&o?`${o.hp}/${s.hp}`:statVal(s,k)}</b></div>`).join('')}</div>
-    <p class="hint">Habilidades: próximamente.</p></div>`;
+    ${h.ability?`<p class="abil">${ABILITIES[h.ability].icon} <b>${ABILITIES[h.ability].name}</b>: ${ABILITIES[h.ability].desc}</p>`:''}</div>`;
   $('dlg-hero').showModal();
 }
 $('dlg-hero').addEventListener('click',e=>{if(e.target===$('dlg-hero'))$('dlg-hero').close();});
@@ -526,7 +542,7 @@ const tile=(x,y)=>{const r=G.map.rows[y];return r&&x>=0&&x<r.length?r[x]:'#';};
 const walkable=(x,y)=>{const t=tile(x,y);return t==='.'||t==='1'||t==='2';};
 const DIRS=[[1,0],[-1,0],[0,1],[0,-1]];
 
-function makeUnit(h,team,x,y,hp){const s=heroStats(h);return {id:uid++,heroId:h.id,team,name:h.name,color:h.color,...s,hp:hp??s.hp,maxhp:s.hp,x,y,acted:false};}
+function makeUnit(h,team,x,y,hp){const s=heroStats(h);return {id:uid++,heroId:h.id,team,name:h.name,color:h.color,...s,ability:h.ability||null,poison:false,hp:hp??s.hp,maxhp:s.hp,x,y,acted:false};}
 
 /* Isla de combate al azar: bordes mordidos, algún hueco, a veces un arroyo y obstáculos sueltos.
    Se reintenta hasta que todas las salidas queden conectadas a pie. */
@@ -635,6 +651,9 @@ function endTurn(){
   if(G.winner)return;
   G.turn=3-G.turn;if(G.turn===1)G.round++;
   G.units.forEach(u=>{if(u.team===G.turn)u.acted=false;});
+  for(const u of G.units.filter(u=>u.team===G.turn&&u.poison)){u.poison=false;u.hp--;log(`🧪 ${who(u)} sufre el veneno: −1 ❤️.`);
+    if(u.hp<=0){G.units=G.units.filter(x=>x!==u);log(`💀 ${who(u)} queda KO.`);}}
+  checkWinner();if(G.winner){G.mode=null;G.sel=null;return;}
   G.actions=Math.min(ACTIONS,G.units.filter(u=>u.team===G.turn).length);
   G.mode=null;G.sel=null;
   log(G.turn===1?`Te toca (ronda ${G.round}).`:'Turno del rival…');
@@ -658,9 +677,14 @@ async function aiTurn(){
     G.busy=true;render();await wait(500);
     const mine=G.units.filter(u=>u.team===2&&!u.acted);if(!mine.length)break;
     let best=null;
-    for(const u of mine)for(const k of ['range','close'])for(const t of targets(u,k)){
-      const pct=k==='close'?u.mhit:Math.max(5,u.rhit-lineCover(u,t)*10),dm=k==='close'?u.mdmg:u.rdmg,sc=pct/10*dm-t.hp+(t.hp<=dm?5:0);if(!best||sc>best.sc)best={u,t,k,sc};}
-    if(best){G.sel=best.u.id;G.busy=false;await attack(best.u,best.t,best.k);continue;}
+    const cand=o=>{if(!best||o.sc>best.sc)best=o;},value=(pct,dm,t)=>pct/10*dm-t.hp+(t.hp<=dm?5:0);
+    for(const u of mine){
+      for(const k of ['range','close'])for(const t of targets(u,k))cand({u,t,k,sc:value(hitInfo(u,t,k).pct,k==='close'?u.mdmg:u.rdmg,t)});
+      if(u.ability&&ABILITIES[u.ability].act)for(const t of abilityTargets(u)){
+        const pc=hitInfo(u,t,'close').pct;
+        cand({u,t,k:'ability',sc:u.ability==='curar'?3+t.maxhp-t.hp:u.ability==='garras'?2*value(Math.max(5,pc-20),u.mdmg,t):value(pc,u.mdmg,t)-1});}
+    }
+    if(best){G.sel=best.u.id;G.busy=false;if(best.k==='ability')await useAbility(best.u,best.t);else await attack(best.u,best.t,best.k);continue;}
     let mv=null;
     for(const u of mine){const cur=aiScore(u,u.x,u.y);
       for(const k of reachable(u)){const [x,y]=k.split(',').map(Number),s=aiScore(u,x,y);if(s>cur&&(!mv||s-cur>mv.gain))mv={u,x,y,gain:s-cur};}}
@@ -678,22 +702,56 @@ function rollAnim(){
     const t=setInterval(()=>{el.textContent=d100();if(++i>=steps){clearInterval(t);const r=d100();el.textContent=r;el.classList.remove('rolling');res(r);}},60);});
 }
 
-async function attack(att,def,kind){
+const cheb=(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y));
+const who=u=>`${u.name}${u.team===2?' (rival)':''}`;
+/* % final de un ataque con cubierta y habilidades pasivas; notes explica cada ajuste */
+function hitInfo(att,def,kind){
+  const close=kind==='close',notes=[];let pct=close?att.mhit:att.rhit;
+  if(!close){const c=lineCover(att,def);
+    if(c>0){if(att.ability==='rasante')notes.push('🎯 ignora cubierta');else{pct-=c*10;notes.push(`−${c*10}% cubierta`);}}
+    if(G.units.some(m=>m.team===def.team&&m.ability==='escudo'&&cheb(m,def)<=1)){pct-=10;notes.push('−10% 🛡️ escudo');}}
+  if(G.units.some(m=>m!==att&&m.team===att.team&&m.ability==='lider'&&cheb(m,att)===1)){pct+=10;notes.push('+10% 👑 liderazgo');}
+  return {pct:Math.max(5,Math.min(95,pct)),notes};
+}
+async function attack(att,def,kind,opt={}){
   G.busy=true;G.mode=null;render();
-  const close=kind==='close',cover=close?0:lineCover(att,def),pct=close?att.mhit:Math.max(5,att.rhit-cover*10);
+  const close=kind==='close',info=hitInfo(att,def,kind),notes=info.notes;let pct=info.pct;
+  if(opt.mod){pct=Math.max(5,pct+opt.mod);notes.push(`${opt.mod}% ${opt.why}`);}
   const roll=await rollAnim(),crit=roll<=5,hit=roll<=pct,dmg=hit?(close?att.mdmg:att.rdmg)+(crit?1:0):0;
   const label=crit?'¡CRÍTICO!':hit?'¡IMPACTO!':'FALLÓ';
-  $('rollinfo').innerHTML=`<span class="res ${hit?'hit':'miss'}">${label}</span>🎲${roll} vs ${close?'👊':'🏹'}${pct}%${cover?` <small>(−${cover*10}% cubierta)</small>`:''}${hit?` · 💥${dmg}`:''}`;
-  const who=u=>`${u.name}${u.team===2?' (rival)':''}`;
+  $('rollinfo').innerHTML=`<span class="res ${hit?'hit':'miss'}">${label}</span>🎲${roll} vs ${close?'👊':'🏹'}${pct}%${notes.length?` <small>(${notes.join(', ')})</small>`:''}${hit?` · 💥${dmg}`:''}`;
   log(`${who(att)} ataca ${close?'de cerca':'a distancia'} a ${who(def)}: 🎲${roll} vs ${pct}% → ${label}${hit?` −${dmg} ❤️`:''}`);
-  if(hit){def.hp=Math.max(0,def.hp-dmg);if(def.hp<=0){G.units=G.units.filter(u=>u!==def);log(`💀 ${who(def)} queda KO.`);}}
-  checkWinner();G.busy=false;spend(att);render();
+  if(hit){def.hp=Math.max(0,def.hp-dmg);
+    if(def.hp<=0){G.units=G.units.filter(u=>u!==def);log(`💀 ${who(def)} queda KO.`);}
+    else if(att.ability==='veneno'&&!def.poison){def.poison=true;log(`🧪 ${who(def)} queda envenenado.`);}}
+  checkWinner();G.busy=false;if(!opt.keep)spend(att);render();
+}
+/* Casillas desde donde una Carga o Picada puede pegarle a t: la actual o una alcanzable, pegada a t */
+function chargeSpots(u,t){
+  const cells=[[u.x,u.y],...[...reachable(u)].map(k=>k.split(',').map(Number))];
+  return cells.filter(([x,y])=>cheb({x,y},t)===1).sort((a,b)=>man(u,{x:a[0],y:a[1]})-man(u,{x:b[0],y:b[1]}));
+}
+function abilityTargets(u){
+  const a=u.ability;
+  if(a==='carga'||a==='picada')return G.units.filter(e=>e.team!==u.team&&chargeSpots(u,e).length);
+  if(a==='garras')return targets(u,'close');
+  if(a==='curar')return G.units.filter(m=>m.team===u.team&&m!==u&&m.hp<m.maxhp&&cheb(m,u)===1);
+  return [];
+}
+async function useAbility(u,t){
+  const a=u.ability,ab=ABILITIES[a];G.mode=null;
+  if(a==='curar'){t.hp=Math.min(t.maxhp,t.hp+1);log(`✚ ${who(u)} cura a ${who(t)}: +1 ❤️.`);spend(u);render();return;}
+  if(a==='carga'||a==='picada'){const [x,y]=chargeSpots(u,t)[0];u.x=x;u.y=y;log(`${ab.icon} ${who(u)} usa ${ab.name}.`);await attack(u,t,'close');return;}
+  if(a==='garras'){log(`🐾 ${who(u)} usa Garras.`);await attack(u,t,'close',{mod:-20,why:'🐾 garras',keep:true});
+    if(G.winner)return;
+    if(G.units.includes(t))await attack(u,t,'close',{mod:-20,why:'🐾 garras'});else{spend(u);render();}}
 }
 
 function onCell(x,y){
   if(G.busy||G.winner||G.turn!==1)return;const u=unitAt(x,y),s=sel();
   if(G.mode==='move'&&s&&!u&&reachable(s).has(x+','+y)){log(`${s.name} se mueve.`);s.x=x;s.y=y;spend(s);render();return;}
   if((G.mode==='close'||G.mode==='range')&&s&&u&&targets(s,G.mode).includes(u)){attack(s,u,G.mode);return;}
+  if(G.mode==='ability'&&s&&u&&abilityTargets(s).includes(u)){useAbility(s,u);return;}
   G.mode=null;G.sel=u?u.id:null;render();
 }
 
@@ -708,14 +766,16 @@ function render(){
   let mv=new Set(),rg=new Set(),tg=[];
   if(s&&G.mode==='move')mv=reachable(s);
   if(s&&(G.mode==='close'||G.mode==='range')){rg=G.mode==='range'&&s.range<=0?new Set():inRange(s,G.mode);tg=targets(s,G.mode);}
+  if(s&&G.mode==='ability')tg=abilityTargets(s);
+  const tgCls=s&&G.mode==='ability'&&s.ability==='curar'?'heal':'tg';
   const b=$('board');b.style.gridTemplateColumns=`repeat(${G.W},1fr)`;b.style.maxWidth=Math.min(560,G.W*68)+'px';
   let h='';
   for(let y=0;y<G.H;y++)for(let x=0;x<G.W;x++){const t=tile(x,y),u=unitAt(x,y),k=x+','+y;
     if(t==='#'){h+=`<div class="cell"></div>`;continue;}
     const cls=['cell',t==='~'?'water':'land'];if((x+y)%2)cls.push('alt');if(tile(x,y+1)==='#')cls.push('edge');
-    if(mv.has(k))cls.push('mv');if(rg.has(k))cls.push('atk');if(u&&tg.includes(u))cls.push('tg');
+    if(mv.has(k))cls.push('mv');if(rg.has(k))cls.push('atk');if(u&&tg.includes(u))cls.push(tgCls);
     const ob=OB[t]?`<span class="ob">${OB[t]}</span>`:'';
-    const tok=u?`<div class="tok j${u.team}${u.acted&&u.team===G.turn?' acted':''}${G.sel===u.id?' sel':''}" style="--c:${u.color}"><span class="nm">${esc(u.name)}</span><span class="hp">${u.hp}</span></div>`:'';
+    const tok=u?`<div class="tok j${u.team}${u.acted&&u.team===G.turn?' acted':''}${G.sel===u.id?' sel':''}" style="--c:${u.color}"><span class="nm">${esc(u.name)}</span><span class="hp">${u.hp}</span>${u.poison?'<span class="psn" title="Envenenado">🧪</span>':''}</div>`:'';
     h+=`<button class="${cls.join(' ')}" style="--g1:${G.map.g1};--g2:${G.map.g2}" data-x="${x}" data-y="${y}" aria-label="Casilla ${x+1},${y+1}${u?': '+esc(u.name)+(u.team===2?' rival':''):''}">${ob}${tok}</button>`;}
   b.innerHTML=h;
 
@@ -723,6 +783,8 @@ function render(){
   if(G.winner)bn.innerHTML=`<span class="win"${G.winner===2?' style="color:var(--red)"':''}>${G.winner===1?'🏆 ¡Ganaron!':'💀 Derrota'}</span>`;
   else if(G.turn===2)bn.innerHTML=`<span class="pill j2">Rival</span> El rival está pensando…`;
   else if(G.mode==='move')bn.innerHTML=`<span class="pill j1">Vos</span> ${mv.size?'Elegí una casilla marcada para moverte.':'No hay lugar para moverse.'}`;
+  else if(G.mode==='ability'){const ab=ABILITIES[s.ability],heal=s.ability==='curar';
+    bn.innerHTML=`<span class="pill j1">Vos</span> ${ab.icon} ${ab.name}: ${tg.length?(heal?'tocá un aliado herido marcado en verde.':'tocá un enemigo marcado en rojo.'):(heal?'no hay aliados heridos pegados.':'no hay enemigos a tu alcance.')}`;}
   else if(G.mode)bn.innerHTML=`<span class="pill j1">Vos</span> ${tg.length?'Tocá un enemigo marcado en rojo.'+(G.mode==='range'?' Cada ficha, 🌿 o 🎃 en el medio resta 10%.':''):'No hay enemigos a tiro.'}`;
   else bn.innerHTML=`<span class="pill j1">Vos</span> Tu turno: tocá una de tus fichas.`;
 
@@ -741,15 +803,18 @@ function render(){
       <button class="btn red" id="btn-back">Volver al mapa</button></div>`;
     $('btn-back').onclick=backToWorld;
   }
-  else if(!s){up.innerHTML=`<p class="hint">Tocá una ficha para ver sus stats. Si es tuya y no actuó todavía, elegí qué hace: mover, pegar o disparar.</p>`;}
+  else if(!s){up.innerHTML=`<p class="hint">Tocá una ficha para ver sus stats. Si es tuya y no actuó todavía, elegí qué hace: mover, pegar, disparar o usar su habilidad.</p>`;}
   else{const ok=canAct(s);
-    const st=s.team!==1?'Ficha rival':s.acted?'Ya actuó este turno':G.turn!==1?'Turno del rival':G.actions<=0?'Sin acciones':'Lista para actuar';
+    const ab=s.ability&&ABILITIES[s.ability];
+    const st=(s.poison?'🧪 envenenado · ':'')+(s.team!==1?'Ficha rival':s.acted?'Ya actuó este turno':G.turn!==1?'Turno del rival':G.actions<=0?'Sin acciones':'Lista para actuar');
     up.innerHTML=`<div class="unit-head"><span class="dot j${s.team}" style="--c:${s.color}"></span><div><b>${esc(s.name)}</b><br><small>${teamName(s.team)} · ❤️ ${s.hp}/${s.maxhp} · ${st}</small></div></div>
     ${statsHTML(s)}
+    ${ab?`<p class="abil">${ab.icon} <b>${ab.name}</b>: ${ab.desc}</p>`:''}
     ${s.team===1?`<div class="actions">
       <button class="btn${G.mode==='move'?' on':''}" data-act="move" ${ok?'':'disabled'}>👟 Mover (${stat(s,'spd')})</button>
       <button class="btn${G.mode==='close'?' on':''}" data-act="close" ${ok?'':'disabled'}>👊 De cerca (${s.mhit}%)</button>
       <button class="btn${G.mode==='range'?' on':''}" data-act="range" ${ok&&s.range>0?'':'disabled'}>🏹 Lejos (${s.range?s.rhit+'% · 📏'+s.range:'—'})</button>
+      ${ab&&ab.act?`<button class="btn${G.mode==='ability'?' on':''}" data-act="ability" ${ok?'':'disabled'}>${ab.icon} ${ab.name}</button>`:''}
     </div>`:''}`;
     up.querySelectorAll('[data-act]').forEach(bt=>bt.onclick=()=>{const a=bt.dataset.act;G.mode=G.mode===a?null:a;render();});
   }
