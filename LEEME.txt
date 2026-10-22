@@ -18,6 +18,8 @@ Mapa del mundo:
   se suma (a la reserva, o al castillo si ya llevás 6). Cada personaje se consigue una sola vez.
 - Cada victoria da oro al grupo (más si la patrulla tenía ⭐). Al perder se pierde la mitad.
 - "Invictos" cuenta las batallas ganadas seguidas; vuelve a 0 al perder.
+- Encargos: el castillo y los pueblos ofrecen trabajos (hasta 3 a la vez): juntar leña en los bosques,
+  cazar manadas de lobos o llevar un paquete a otro pueblo. Se cobran en oro al volver o al llegar.
 - Con "Ver" se abre el retrato en pixel art y las stats completas del personaje.
 - La vida perdida se mantiene. Quien cae en una pelea ganada vuelve con 1 vida.
   Si perdés, volvés al castillo con todos curados. También podés huir en tu turno.
@@ -31,10 +33,12 @@ Combate (vos contra la máquina):
 - Del 1 al 5 es crítico (+1 daño).
 - Árboles, casas, pozos y rocas tapan la vista. Cada ficha, calabaza, arbusto o cactus en el medio resta 10% al tiro.
 - Habilidades: Liderazgo (Bruno), Curar (Lía), Picada (Pico, Rayo), Carga (Toro), Escudo (Muro),
-  Tiro rasante (Ojo), Veneno (Aguja), Garras (Zarpa). Las de acción tienen botón propio.
+  Tiro rasante (Ojo), Veneno (Aguja), Garras (Zarpa), Manada (Lobo Gris). Las de acción tienen botón propio.
+  La Carga va solo en línea recta. Después de una Picada, el volador pierde su próximo turno.
 - Los mapas de combate se generan al azar (a veces sale uno de los hechos a mano).
 
-El progreso (colección, equipo y posición) se guarda en el navegador.
+El progreso (colección, equipo, oro, encargos y posición) se guarda en el navegador.
+Imágenes propias: poné PNGs en la carpeta img/ (ver img/LEEME.txt) y reemplazan al pixel art.
 En index.html: CLASSES (clases base), HEROES (personajes = clase + variación chica),
 MAPS (mapas de combate: # vacío, . pasto, 1/2 salidas, T árbol, H casa, W pozo, o arbusto,
 p calabaza, ~ agua) y WORLD (castillo, rocas, bosques y puntos de aparición del mapa del mundo).
