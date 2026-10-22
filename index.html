@@ -47,6 +47,14 @@ header p{margin:0;color:var(--muted)}
 .cell.atk::after{content:"";position:absolute;inset:0;background:rgba(227,54,62,.22)}
 .cell.heal .tok{box-shadow:0 0 0 3px var(--good),0 0 0 7px rgba(63,191,110,.4)}
 .tok .psn{position:absolute;top:-7px;right:-7px;font-size:13px;z-index:2}
+.tok .zz{position:absolute;top:-7px;left:-7px;font-size:13px;z-index:2}
+.quest{background:var(--panel2);border-radius:5px;padding:8px 10px;display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap;font-size:14px}
+.quest.offer{background:transparent;border:1px dashed #6a6a72}
+.quest>div{flex:1;min-width:0}
+.quest small{display:block;color:var(--muted);font-size:13px}
+.quest .reward{font-family:var(--f-num);font-weight:700}
+.quest .btn{padding:4px 10px;font-size:13px}
+img.pix{object-fit:contain}
 .abil{margin:0;font-size:13.5px;color:var(--muted);line-height:1.4}
 .abil b{color:var(--ink)}
 .cell.tg .tok{box-shadow:0 0 0 3px var(--target),0 0 0 7px rgba(255,74,82,.4)}
@@ -177,6 +185,8 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
   <aside class="side">
     <div id="world-panel" class="stack">
       <div class="chips"><span class="streak" id="gold" title="Oro del grupo. Al perder una batalla se pierde la mitad."></span><span class="streak" id="streak" title="Batallas ganadas seguidas. Se reinicia al perder."></span></div>
+      <h2 class="sub">Encargos <small id="quest-count"></small></h2>
+      <div class="roster" id="quests"></div>
       <h2 class="sub">Equipo activo <small id="party-count"></small></h2>
       <div class="roster" id="party"></div>
       <h2 class="sub">Reserva <small id="res-count"></small></h2>
@@ -229,24 +239,27 @@ const ACTIONS=3, PARTY_MAX=3, CARRY_MAX=6;
 const CLASSES={
   soldado:{name:'Soldado',hp:3,spd:3,mhit:80,mdmg:1,rhit:0,range:0,rdmg:0},
   tirador:{name:'Tirador',hp:2,spd:3,mhit:60,mdmg:1,rhit:75,range:3,rdmg:1},
-  volador:{name:'Volador',hp:2,spd:4,mhit:70,mdmg:1,rhit:65,range:2,rdmg:1,fly:true}
+  volador:{name:'Volador',hp:2,spd:4,mhit:70,mdmg:1,rhit:65,range:2,rdmg:1,fly:true},
+  bestia:{name:'Bestia',hp:2,spd:4,mhit:75,mdmg:1,rhit:0,range:0,rdmg:0}
 };
 /* Colección: cada personaje es una clase con una variación chica. look = cómo se dibuja su retrato */
 const HEROES=[
   {id:'bruno',name:'Bruno',cls:'soldado',color:'#0f9b8e',mod:{},ability:'lider',look:{skin:'#e0ac69',hair:'#3b2a1a',weapon:'sword'}},
-  {id:'lia',name:'Lía',cls:'tirador',color:'#e0261b',mod:{},ability:'curar',look:{skin:'#ffdbac',hair:'#a0522d',long:true}},
+  {id:'lia',name:'Lía',cls:'tirador',color:'#e0261b',mod:{range:-1},ability:'curar',look:{skin:'#ffdbac',hair:'#a0522d',long:true}},
   {id:'pico',name:'Pico',cls:'volador',color:'#0a6fca',mod:{},ability:'picada',look:{skin:'#f1c27d',hair:'#e2c16b'}},
   {id:'toro',name:'Toro',cls:'soldado',color:'#2d7a3a',mod:{hp:1,spd:-1},ability:'carga',look:{skin:'#c68642',hair:'#2a1d14',pants:'#5a3e2b',weapon:'axe',horns:true}},
   {id:'muro',name:'Muro',cls:'soldado',color:'#6f6f78',mod:{mdmg:1,mhit:-10},ability:'escudo',look:{skin:'#f1c27d',hair:'#8a6a3a',weapon:'sword',shield:true}},
   {id:'ojo',name:'Ojo',cls:'tirador',color:'#d9822b',mod:{range:1,rhit:-10},ability:'rasante',look:{skin:'#c68642',hair:'#222222',hood:true}},
   {id:'aguja',name:'Aguja',cls:'tirador',color:'#c2367a',mod:{rdmg:1,hp:-1},ability:'veneno',look:{skin:'#8d5524',hair:'#111111',hood:true,mask:true}},
   {id:'rayo',name:'Rayo',cls:'volador',color:'#6b5bd6',mod:{spd:1,mhit:-10},ability:'picada',look:{skin:'#e0ac69',hair:'#222222',tips:true}},
-  {id:'zarpa',name:'Zarpa',cls:'volador',color:'#8a5a2b',mod:{mhit:10,rhit:-10},ability:'garras',look:{skin:'#8d5524',hair:'#4a3020',wing:'#a7a39a',claws:true,long:true}}
+  {id:'zarpa',name:'Zarpa',cls:'volador',color:'#8a5a2b',mod:{mhit:10,rhit:-10},ability:'garras',look:{skin:'#8d5524',hair:'#4a3020',wing:'#a7a39a',claws:true,long:true}},
+  {id:'lobogris',name:'Lobo Gris',cls:'bestia',color:'#9aa1ab',mod:{hp:1},ability:'manada',look:{}}
 ];
 /* Rivales comunes: no se pueden sumar, solo acompañan */
 const FOES=[
   {id:'bandido',name:'Bandido',cls:'soldado',color:'#7d6b5a',mod:{},look:{skin:'#d9a066',hair:'#3a2a1a',weapon:'sword'}},
   {id:'arquero',name:'Arquero',cls:'tirador',color:'#5d6b4a',mod:{},look:{skin:'#c68642',hair:'#222222',hood:true}},
+  {id:'lobo',name:'Lobo',cls:'bestia',color:'#6d655e',mod:{},look:{}},
   {id:'cuervo',name:'Cuervo',cls:'volador',color:'#3e3e48',mod:{},look:{skin:'#e0ac69',hair:'#111111',wing:'#6a6a74'}},
   {id:'minero',name:'Minero',cls:'soldado',color:'#8a7a5a',mod:{hp:1,mhit:-10},look:{skin:'#e0ac69',hair:'#3a2a1a',weapon:'axe'}},
   {id:'nomada',name:'Nómada',cls:'tirador',color:'#c9a04a',mod:{range:1,rhit:-10},look:{skin:'#c68642',hair:'#222222',hood:true}},
@@ -255,12 +268,13 @@ const FOES=[
 /* Habilidad mayor de cada personaje: las de acción tienen botón propio y gastan la acción; las pasivas funcionan solas */
 const ABILITIES={
   lider:{name:'Liderazgo',icon:'👑',desc:'Los aliados pegados a él (diagonales incluidas) tienen +10% para acertar.'},
-  carga:{name:'Carga',icon:'🐂',act:true,desc:'Se mueve y pega de cerca en la misma acción.'},
+  carga:{name:'Carga',icon:'🐂',act:true,desc:'Avanza en línea recta (sin diagonales ni girar) y pega de cerca en la misma acción.'},
   escudo:{name:'Escudo',icon:'🛡️',desc:'Los tiros contra él o contra los aliados pegados a él tienen −10%.'},
   curar:{name:'Curar',icon:'✚',act:true,desc:'Un aliado pegado recupera 1 ❤️.'},
   rasante:{name:'Tiro rasante',icon:'🎯',desc:'Sus tiros ignoran la cubierta de fichas, arbustos y calabazas.'},
   veneno:{name:'Veneno',icon:'🧪',desc:'Cuando pega, envenena: el rival pierde 1 ❤️ más al empezar su próximo turno.'},
-  picada:{name:'Picada',icon:'🦅',act:true,desc:'Vuela y pega de cerca en la misma acción.'},
+  picada:{name:'Picada',icon:'🦅',act:true,desc:'Vuela y pega de cerca en la misma acción, pero queda agotado y pierde su próximo turno.'},
+  manada:{name:'Manada',icon:'🐺',desc:'Pega de cerca con +10% por cada aliado que también esté pegado al blanco (hasta +20%).'},
   garras:{name:'Garras',icon:'🐾',act:true,desc:'Dos ataques de cerca seguidos, cada uno con −20%.'}
 };
 const START_OWNED=['bruno','lia','pico','toro'], START_PARTY=['bruno','lia','pico'];
@@ -310,9 +324,9 @@ const MAPS=[
 /* Mundo: 7×7 zonas de 900×830; la (0,0) es la del castillo. En pantalla X crece al este e Y al norte */
 const ZW=900,ZH=830,ZR=3,VW=900,VH=830,CAM_M=150;
 const BIOMES={
-  pradera:{name:'Pradera',tint:'#f4f1e8',foes:['bandido','arquero','cuervo'],stars:[]},
-  bosque:{name:'Bosque',tint:'#eaefdc',foes:['arquero','arquero','bandido'],stars:['lia','ojo','aguja']},
-  montana:{name:'Montañas y minas',tint:'#eeeae3',foes:['minero','minero','bandido'],stars:['bruno','toro','muro']},
+  pradera:{name:'Pradera',tint:'#f4f1e8',foes:['bandido','arquero','cuervo','lobo'],stars:[]},
+  bosque:{name:'Bosque',tint:'#eaefdc',foes:['arquero','arquero','bandido','lobo','lobo'],stars:['lia','ojo','aguja','lobogris']},
+  montana:{name:'Montañas y minas',tint:'#eeeae3',foes:['minero','minero','bandido','lobo'],stars:['bruno','toro','muro']},
   desierto:{name:'Desierto',tint:'#f7ecd0',foes:['nomada','nomada','bandido'],stars:[],gold:6},
   acantilado:{name:'Acantilados',tint:'#e9f0f2',foes:['cuervo','cuervo','arquero'],stars:['pico','rayo','zarpa']},
   templario:{name:'Castillo templario',tint:'#f0e9e4',foes:['templario','templario','arquero'],stars:[],gold:12,size:3}
@@ -365,7 +379,7 @@ function heroStats(h){
 function statVal(s,k){if(!s.range&&(k==='rhit'||k==='range'||k==='rdmg'))return '—';return PCT.has(k)?s[k]+'%':s[k];}
 
 /* ---- Progreso guardado: colección, equipo activo y posición ---- */
-function freshSave(){const owned={};START_OWNED.forEach(id=>owned[id]={hp:heroStats(hero(id)).hp});return {owned,party:START_PARTY.slice(),carry:START_OWNED.slice(),streak:0,gold:0,home:'castle',pos:{...WORLD.start}};}
+function freshSave(){const owned={};START_OWNED.forEach(id=>owned[id]={hp:heroStats(hero(id)).hp});return {owned,party:START_PARTY.slice(),carry:START_OWNED.slice(),streak:0,gold:0,home:'castle',quests:[],pos:{...WORLD.start}};}
 function loadSave(){
   try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));
     if(s&&s.owned&&Array.isArray(s.party)&&s.pos){
@@ -374,14 +388,14 @@ function loadSave(){
       /* Partidas viejas no tenían "llevados": se arma con el equipo y la banca hasta 6 */
       const carry=Array.isArray(s.carry)?s.carry:Object.keys(s.owned);
       s.carry=[...new Set([...s.party,...carry.filter(id=>s.owned[id])])].slice(0,CARRY_MAX);
-      s.streak=s.streak|0;s.gold=s.gold|0;s.home=s.home||'castle';
+      s.streak=s.streak|0;s.gold=s.gold|0;s.home=s.home||'castle';s.quests=Array.isArray(s.quests)?s.quests:[];
       s.pos.x=Math.min(WORLD.maxX-15,Math.max(WORLD.minX+15,+s.pos.x||0));s.pos.y=Math.min(WORLD.maxY-15,Math.max(WORLD.minY+15,+s.pos.y||0));
       if(s.party.length)return s;}}catch(e){}
   return freshSave();
 }
 let P=loadSave();
 let W=freshWorld();
-function freshWorld(){const town=townAt(P.pos);return {p:{...P.pos},cam:{x:0,y:0},camSnap:true,target:null,trail:[],groups:[],grace:0,town,inCastle:!!town,respawn:0,log:[],gid:1,battleGroup:null};}
+function freshWorld(){const town=townAt(P.pos);return {p:{...P.pos},cam:{x:0,y:0},camSnap:true,target:null,trail:[],groups:[],grace:0,town,inCastle:!!town,respawn:0,log:[],gid:1,battleGroup:null,offers:{},wood:[]};}
 function persist(){P.pos={x:Math.round(W.p.x),y:Math.round(W.p.y)};try{localStorage.setItem(SAVE_KEY,JSON.stringify(P));}catch(e){}}
 let screen='world';
 
@@ -453,6 +467,7 @@ function buildWorld(){
   $('world-svg').innerHTML=`<g id="w-terrain">${h}</g>
     <polyline id="w-trail" class="trail" points=""/>
     <path id="w-aim" class="aim" d=""/>
+    <g id="w-wood"></g>
     <g id="w-enemies"></g>
     <g id="w-party"></g>`;
   W.zoneKey=null;renderPartyGlyph();
@@ -470,7 +485,7 @@ function renderPartyGlyph(){
   $('w-party').innerHTML=`<circle r="13" fill="#2a2a2a"/><circle r="7" fill="none" stroke="#f4f1e8" stroke-width="2"/>${dots}<title>Tu equipo</title>`;
 }
 function enemyGlyph(g){
-  const n=g.members.length,dots=g.members.map((id,i)=>`<circle cx="${(i-(n-1)/2)*10}" cy="-21" r="3.5" fill="#b3262d"/>`).join('');
+  const n=g.members.length,dots=g.members.map((id,i)=>`<circle cx="${(i-(n-1)/2)*10}" cy="-21" r="3.5" fill="${id==='lobo'?'#6d655e':'#b3262d'}"/>`).join('');
   return `<g class="eg" data-g="${g.id}"><circle r="12" fill="#f4f1e8" stroke="#b3262d" stroke-width="3"/><path d="M-5 -5L5 5M5 -5L-5 5" stroke="#b3262d" stroke-width="3" stroke-linecap="round"/>${dots}${g.star?'<path d="M0 -38L2.6 -32.6L8.5 -31.8L4.2 -27.7L5.3 -21.9L0 -24.7L-5.3 -21.9L-4.2 -27.7L-8.5 -31.8L-2.6 -32.6Z" transform="translate(0 -6) scale(1.15)" fill="#e6b422" stroke="#2a2a2a" stroke-width="1.5" stroke-linejoin="round"/>':''}<text class="bang" x="12" y="-14">!</text><title>Patrulla: ${g.members.map(id=>hero(id).name).join(', ')}${g.star?` · ⭐ ${hero(g.star).name} se puede sumar`:''}</title></g>`;
 }
 function spawnGroup(){
@@ -479,7 +494,10 @@ function spawnGroup(){
   /* Más o menos una de cada 4 la lidera un personaje único de esa zona que todavía no tenés: la patrulla con ⭐ */
   const taken=new Set(W.groups.map(g=>g.star)),free=HEROES.filter(h=>bio.stars.includes(h.id)&&!P.owned[h.id]&&!taken.has(h.id));
   const star=free.length&&Math.random()<.25?pick(free).id:null;
-  const members=Array.from({length:star?n-1:n},()=>pick(bio.foes));if(star)members.unshift(star);
+  let members=Array.from({length:star?n-1:n},()=>pick(bio.foes));if(star)members.unshift(star);
+  /* Con un encargo de caza activo, aparecen más manadas de lobos */
+  const hunt=['pradera','bosque','montana'].includes(s.biome)&&P.quests.some(q=>q.type==='lobos'&&q.have<q.need)&&Math.random()<.4;
+  if(hunt&&!star)members=Array(n).fill('lobo');
   W.groups.push({id:W.gid++,x:s.x,y:s.y,home:{x:s.x,y:s.y},biome:s.biome,to:null,tt:0,pause:Math.random()*2,chasing:false,members,star});
 }
 const inForest=o=>WORLD.slow.some(f=>dist(o,f)<f.r);
@@ -489,6 +507,35 @@ function collide(o){
   o.x=Math.min(WORLD.maxX-15,Math.max(WORLD.minX+15,o.x));o.y=Math.min(WORLD.maxY-15,Math.max(WORLD.minY+15,o.y));
 }
 function wlog(m){W.log.unshift(m);W.log=W.log.slice(0,30);if(screen==='world')$('wlog').innerHTML=W.log.map(l=>`<li>${l}</li>`).join('');}
+/* ---- Encargos de los pueblos (como los trabajos de Occidental Heroes): leña, caza y entregas ---- */
+const QUEST_MAX=3;
+const townById=id=>WORLD.towns.find(t=>t.id===id)||WORLD.towns[0];
+const townPlace=t=>`${t.name} (X ${Math.floor(t.x/ZW)} · Y ${-Math.floor(t.y/ZH)})`;
+function makeOffers(t){
+  const ri=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+  return shuffle(['lena','lobos','entrega']).slice(0,2).map(type=>{
+    if(type==='lena'){const n=ri(3,5);return {type,town:t.id,need:n,have:0,reward:8*n};}
+    if(type==='lobos'){const n=ri(1,2);return {type,town:t.id,need:n,have:0,reward:25*n};}
+    const to=pick(WORLD.towns.filter(x=>x.id!==t.id));
+    return {type,town:t.id,to:to.id,need:1,have:0,reward:15+12*Math.max(1,Math.round(dist(t,to)/ZW))};
+  });
+}
+function questText(q){
+  const t=townById(q.town),done=q.have>=q.need,back=` · ¡Listo! Volvé a ${townPlace(t)}`;
+  if(q.type==='lena')return `🪵 <b>Leña para ${t.name}</b><small>${q.have}/${q.need} juntada${done?back:' · aparece en los bosques'}</small>`;
+  if(q.type==='lobos')return `🐺 <b>Cazar lobos para ${t.name}</b><small>${q.have}/${q.need} manadas${done?back:' · andan por praderas, bosques y montañas'}</small>`;
+  return `📦 <b>Paquete de ${t.name}</b><small>Llevalo a ${townPlace(townById(q.to))}</small>`;
+}
+function turnInQuests(t){
+  const done=P.quests.filter(q=>q.type==='entrega'?q.to===t.id:q.town===t.id&&q.have>=q.need);
+  for(const q of done){P.gold+=q.reward;wlog(`✅ Encargo cumplido en ${t.name}: 🪙 +${q.reward}.`);}
+  P.quests=P.quests.filter(q=>!done.includes(q));
+}
+function spawnWood(){
+  const fs=WORLD.slow.filter(f=>{const d=dist(f,W.p);return d>120&&d<1100;});if(!fs.length)return;
+  const f=pick(fs),a=Math.random()*6.283,d=Math.random()*f.r*.7,p={x:f.x+Math.cos(a)*d,y:f.y+Math.sin(a)*d};collide(p);
+  W.wood.push({id:W.gid++,...p});
+}
 function restAtTown(t){
   let healed=false;for(const id in P.owned){const mx=heroStats(hero(id)).hp;if(P.owned[id].hp<mx){P.owned[id].hp=mx;healed=true;}}
   wlog(`${t.icon} ${t.id==='castle'?'Llegan al castillo':'Llegan a '+t.name}${healed?': todos recuperan la vida':''}. Desde acá se usa el cuartel.`);persist();
@@ -500,7 +547,7 @@ function step(dt){
     if(W.target&&Math.hypot(W.p.x-ox,W.p.y-oy)<sp*.2)W.target=null; /* trabado contra una roca */
     const lt=W.trail[W.trail.length-1];if(!lt||dist(lt,W.p)>14){W.trail.push({x:W.p.x,y:W.p.y});if(W.trail.length>36)W.trail.shift();}}
   const tw=townAt(W.p);
-  if((tw&&tw.id)!==(W.town&&W.town.id)){W.town=tw;W.inCastle=!!tw;if(tw){P.home=tw.id;restAtTown(tw);}renderWorldPanel();}
+  if((tw&&tw.id)!==(W.town&&W.town.id)){W.town=tw;W.inCastle=!!tw;if(tw){P.home=tw.id;turnInQuests(tw);if(!(W.offers[tw.id]||[]).length)W.offers[tw.id]=makeOffers(tw);restAtTown(tw);}renderWorldPanel();}
   const safe=WORLD.towns.some(t=>dist(W.p,t)<95);
   for(const g of W.groups){
     g.chasing=!W.grace&&!safe&&dist(g,W.p)<170;
@@ -514,7 +561,12 @@ function step(dt){
   }
   /* Las patrullas muy lejanas se van y aparecen nuevas cerca del equipo */
   W.groups=W.groups.filter(g=>dist(g,W.p)<1700);
-  W.respawn+=dt;if(W.respawn>3){W.respawn=0;if(W.groups.length<6)spawnGroup();}
+  /* Leña: aparece en los bosques mientras haya un encargo que la pida */
+  const needWood=P.quests.some(q=>q.type==='lena'&&q.have<q.need);
+  for(const w of W.wood)if(dist(w,W.p)<22){const q=P.quests.find(q=>q.type==='lena'&&q.have<q.need);
+    if(q){q.have++;w.taken=true;wlog(`🪵 Juntan leña (${q.have}/${q.need}).`);persist();renderWorldPanel();}}
+  W.wood=W.wood.filter(w=>!w.taken&&dist(w,W.p)<1700);
+  W.respawn+=dt;if(W.respawn>3){W.respawn=0;if(W.groups.length<6)spawnGroup();if(needWood&&W.wood.length<5)spawnWood();}
 }
 function drawWorld(){
   if(W.camSnap){W.camSnap=false;snapCam();}else updateCam();
@@ -526,6 +578,8 @@ function drawWorld(){
   $('w-trail').setAttribute('points',W.trail.map(p=>`${p.x|0},${p.y|0}`).join(' '));
   const t=W.target;$('w-aim').setAttribute('d',t?`M${W.p.x} ${W.p.y}L${t.x} ${t.y}M${t.x-6} ${t.y-6}L${t.x+6} ${t.y+6}M${t.x+6} ${t.y-6}L${t.x-6} ${t.y+6}`:'');
   $('w-party').setAttribute('transform',`translate(${W.p.x} ${W.p.y})`);
+  const wg=$('w-wood'),wids=W.wood.map(w=>w.id).join();
+  if(wg.dataset.ids!==wids){wg.dataset.ids=wids;wg.innerHTML=W.wood.map(w=>`<g transform="translate(${Math.round(w.x)} ${Math.round(w.y)})"><path d="M-9 -7L9 -7L9 -1L-9 -1ZM-9 1L9 1L9 7L-9 7Z" fill="#c8a26a" stroke="#2a2a2a" stroke-width="2" stroke-linejoin="round"/><title>Leña</title></g>`).join('');}
   const eg=$('w-enemies'),ids=W.groups.map(g=>g.id).join();
   if(eg.dataset.ids!==ids){eg.innerHTML=W.groups.map(enemyGlyph).join('');eg.dataset.ids=ids;}
   W.groups.forEach((g,i)=>{const el=eg.children[i];el.setAttribute('transform',`translate(${g.x} ${g.y})`);el.classList.toggle('chase',g.chasing);});
@@ -563,12 +617,19 @@ function renderWorldPanel(){
   $('barracks').innerHTML=W.inCastle
     ?(bk.map(id=>heroCard(id,'barracks')).join('')||'<p class="hint">No queda nadie en el cuartel: viajan todos.</p>')
     :`<p class="hint">🏰 ${bk.length?`${bk.length} te ${bk.length>1?'esperan':'espera'}`:'Nadie te espera'} en el cuartel. Pasá por el castillo o un pueblo para cambiar quién viaja.</p>`;
+  const offers=W.town?(W.offers[W.town.id]||[]):[];
+  $('quest-count').textContent=`${P.quests.length}/${QUEST_MAX}`;
+  $('quests').innerHTML=P.quests.map((q,i)=>`<div class="quest"><div>${questText(q)}</div><span class="reward">🪙 ${q.reward}</span><button class="btn" data-qdrop="${i}">Abandonar</button></div>`).join('')
+    +offers.map((q,i)=>`<div class="quest offer"><div>${questText(q)}</div><span class="reward">🪙 ${q.reward}</span><button class="btn" data-qtake="${i}" ${P.quests.length>=QUEST_MAX?'disabled':''}>Aceptar</button></div>`).join('')
+    ||'<p class="hint">Sin encargos. El castillo y los pueblos ofrecen trabajos cuando pasás por ahí.</p>';
   $('wlog').innerHTML=W.log.map(l=>`<li>${l}</li>`).join('');
   renderPartyGlyph();
 }
 $('world-panel').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;
   if(d.view){openHero(d.view);return;}
+  if(d.qdrop!==undefined){const q=P.quests[+d.qdrop];P.quests.splice(+d.qdrop,1);wlog(`Se abandona un encargo de ${townById(q.town).name}.`);persist();renderWorldPanel();return;}
+  if(d.qtake!==undefined&&W.town&&P.quests.length<QUEST_MAX){const q=W.offers[W.town.id].splice(+d.qtake,1)[0];P.quests.push(q);wlog(`📜 Nuevo encargo: ${questText(q).replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim()}`);persist();renderWorldPanel();return;}
   if(d.in&&P.party.length<PARTY_MAX)P.party.push(d.in);
   else if(d.out&&P.party.length>1)P.party=P.party.filter(id=>id!==d.out);
   else if(d.drop&&W.inCastle&&!(P.party.includes(d.drop)&&P.party.length<=1)){P.party=P.party.filter(id=>id!==d.drop);P.carry=P.carry.filter(id=>id!==d.drop);}
@@ -576,7 +637,7 @@ $('world-panel').addEventListener('click',e=>{
   else return;
   persist();renderWorldPanel();
 });
-$('btn-reset').onclick=()=>{if(!confirm('¿Borrar la colección y empezar de cero?'))return;P=freshSave();W=freshWorld();buildWorld();for(let i=0;i<6;i++)spawnGroup();drawWorld();persist();wlog('Arranca una nueva aventura.');renderWorldPanel();};
+$('btn-reset').onclick=()=>{if(!confirm('¿Borrar la colección y empezar de cero?'))return;P=freshSave();W=freshWorld();buildWorld();if(W.town)W.offers[W.town.id]=makeOffers(W.town);for(let i=0;i<6;i++)spawnGroup();drawWorld();persist();wlog('Arranca una nueva aventura.');renderWorldPanel();};
 
 /* ---- Retratos: pixel art armado con rectángulos y contorno automático; caras sin rasgos a propósito ---- */
 const SPR_W=20,SPR_H=26,spriteCache={};
@@ -584,8 +645,15 @@ function shade(hex,f){const n=parseInt(hex.slice(1),16);return '#'+[n>>16,n>>8&2
 function spritePixels(h){
   const px=Array.from({length:SPR_H},()=>Array(SPR_W).fill(null));
   const r=(x,y,w,hh,c)=>{for(let j=y;j<y+hh;j++)for(let i=x;i<x+w;i++)if(j>=0&&j<SPR_H&&i>=0&&i<SPR_W)px[j][i]=c;};
-  const L=h.look,cl=h.color,cd=shade(cl,.7),sk=L.skin,sd=shade(sk,.82),hr=L.hair;
+  const L=h.look,cl=h.color,cd=shade(cl,.7),sk=L.skin||'#e0ac69',sd=shade(sk,.82),hr=L.hair||'#222222';
   const MET='#c9cfd6',MED='#7f8893',WOOD='#8a5a2b',LEA='#6b4a2e',BONE='#efe6cf',GOLD='#e6b422',BOOT='#3a2c22',PANT=L.pants||'#45454f';
+  if(h.cls==='bestia'){
+    /* Lobo de perfil mirando a la derecha */
+    const lt=shade(cl,1.15),PAW='#3a2c22';
+    r(0,11,2,1,cd);r(1,12,3,2,cd);r(4,13,10,6,cl);r(4,13,10,1,lt);r(5,18,8,1,lt);
+    r(13,10,4,5,cl);r(14,8,4,4,cl);r(18,10,2,2,cl);r(14,6,1,2,cd);r(16,6,1,2,cd);r(19,10,1,1,'#231c1c');
+    r(5,19,2,5,cd);r(7,19,2,5,cl);r(11,19,2,5,cd);r(13,19,2,5,cl);r(5,24,2,1,PAW);r(7,24,2,1,PAW);r(11,24,2,1,PAW);r(13,24,2,1,PAW);
+  }else{
   /* Lo que va detrás del cuerpo */
   if(h.cls==='volador'){const wc=L.wing||'#f2efe6',wd=shade(wc,.82);
     [[8,3],[9,1],[10,0],[11,0],[12,0],[13,1],[14,2],[15,3]].forEach(([y,x0])=>{r(x0,y,6-x0,1,y%2?wd:wc);r(14,y,6-x0,1,y%2?wd:wc);});
@@ -611,12 +679,16 @@ function spritePixels(h){
     r(3,15,13,1,WOOD);r(15,12,1,7,shade(WOOD,.75));r(2,15,1,1,MET);
   }
   if(h.cls==='volador'){r(7,4,6,1,cl);if(L.claws){r(3,19,1,1,BONE);r(5,19,1,1,BONE);r(14,19,1,1,BONE);r(16,19,1,1,BONE);}}
+  }
   /* Contorno: todo hueco pegado a algo dibujado se pinta oscuro */
   const out=px.map(row=>row.slice());
   for(let y=0;y<SPR_H;y++)for(let x=0;x<SPR_W;x++)if(!px[y][x]&&DIRS.some(([dx,dy])=>px[y+dy]&&px[y+dy][x+dx]))out[y][x]='#231c1c';
   return out;
 }
+const IMG_OK={};
+HEROES.concat(FOES).forEach(h=>{const im=new Image();im.onload=()=>{IMG_OK[h.id]=im.src;if(screen==='world')renderWorldPanel();};im.src=`img/${h.id}.png`;});
 function spriteSVG(h,scale){
+  if(IMG_OK[h.id])return `<img class="pix" src="${IMG_OK[h.id]}" width="${SPR_W*scale}" height="${SPR_H*scale}" alt="">`;
   if(!spriteCache[h.id]){const px=spritePixels(h);let rects='';
     for(let y=0;y<SPR_H;y++){let x=0;while(x<SPR_W){const c=px[y][x];if(!c){x++;continue;}let e=x;while(e+1<SPR_W&&px[y][e+1]===c)e++;
       rects+=`<rect x="${x}" y="${y}" width="${e-x+1}" height="1" fill="${c}"/>`;x=e+1;}}
@@ -701,6 +773,7 @@ function resolveBattle(w){
   const g=W.battleGroup;
   if(w===1){
     syncPartyHp();W.groups=W.groups.filter(x=>x!==g);
+    if(g.members.includes('lobo'))for(const q of P.quests)if(q.type==='lobos'&&q.have<q.need){q.have++;log(`🐺 Manada cazada para ${townById(q.town).name} (${q.have}/${q.need}).`);}
     G.gold=6+4*g.members.length+(g.star?15:0)+(BIOMES[g.biome||'pradera'].gold||0)+Math.floor(Math.random()*6);P.gold+=G.gold;
     if(g.star&&!P.owned[g.star]){const id=g.star;P.owned[id]={hp:heroStats(hero(id)).hp};G.recruit=id;
       G.recruitTravels=P.carry.length<CARRY_MAX;if(G.recruitTravels)P.carry.push(id);
@@ -763,12 +836,14 @@ function spend(u){
 function endTurn(){
   if(G.winner)return;
   G.turn=3-G.turn;if(G.turn===1)G.round++;
-  G.units.forEach(u=>{if(u.team===G.turn)u.acted=false;});
+  G.units.forEach(u=>{if(u.team!==G.turn)return;u.acted=false;u.resting=false;
+    if(u.tired){u.tired=false;u.resting=true;u.acted=true;log(`😴 ${who(u)} descansa este turno.`);}});
   for(const u of G.units.filter(u=>u.team===G.turn&&u.poison)){u.poison=false;u.hp--;log(`🧪 ${who(u)} sufre el veneno: −1 ❤️.`);
     if(u.hp<=0){G.units=G.units.filter(x=>x!==u);log(`💀 ${who(u)} queda KO.`);}}
   checkWinner();if(G.winner){G.mode=null;G.sel=null;return;}
-  G.actions=Math.min(ACTIONS,G.units.filter(u=>u.team===G.turn).length);
+  G.actions=Math.min(ACTIONS,G.units.filter(u=>u.team===G.turn&&!u.acted).length);
   G.mode=null;G.sel=null;
+  if(!G.actions){log(`${teamName(G.turn)}: nadie puede actuar, se pasa el turno.`);return endTurn();}
   log(G.turn===1?`Te toca (ronda ${G.round}).`:'Turno del rival…');
   if(G.turn===2)setTimeout(aiTurn,350);
 }
@@ -795,7 +870,7 @@ async function aiTurn(){
       for(const k of ['range','close'])for(const t of targets(u,k))cand({u,t,k,sc:value(hitInfo(u,t,k).pct,k==='close'?u.mdmg:u.rdmg,t)});
       if(u.ability&&ABILITIES[u.ability].act)for(const t of abilityTargets(u)){
         const pc=hitInfo(u,t,'close').pct;
-        cand({u,t,k:'ability',sc:u.ability==='curar'?3+t.maxhp-t.hp:u.ability==='garras'?2*value(Math.max(5,pc-20),u.mdmg,t):value(pc,u.mdmg,t)-1});}
+        cand({u,t,k:'ability',sc:u.ability==='curar'?3+t.maxhp-t.hp:u.ability==='garras'?2*value(Math.max(5,pc-20),u.mdmg,t):value(pc,u.mdmg,t)-1-(u.ability==='picada'?2:0)});}
     }
     if(best){G.sel=best.u.id;G.busy=false;if(best.k==='ability')await useAbility(best.u,best.t);else await attack(best.u,best.t,best.k);continue;}
     let mv=null;
@@ -824,6 +899,7 @@ function hitInfo(att,def,kind){
     if(c>0){if(att.ability==='rasante')notes.push('🎯 ignora cubierta');else{pct-=c*10;notes.push(`−${c*10}% cubierta`);}}
     if(G.units.some(m=>m.team===def.team&&m.ability==='escudo'&&cheb(m,def)<=1)){pct-=10;notes.push('−10% 🛡️ escudo');}}
   if(G.units.some(m=>m!==att&&m.team===att.team&&m.ability==='lider'&&cheb(m,att)===1)){pct+=10;notes.push('+10% 👑 liderazgo');}
+  if(close&&att.ability==='manada'){const k=Math.min(2,G.units.filter(m=>m!==att&&m.team===att.team&&cheb(m,def)===1).length);if(k){pct+=10*k;notes.push(`+${10*k}% 🐺 manada`);}}
   return {pct:Math.max(5,Math.min(95,pct)),notes};
 }
 async function attack(att,def,kind,opt={}){
@@ -841,7 +917,9 @@ async function attack(att,def,kind,opt={}){
 }
 /* Casillas desde donde una Carga o Picada puede pegarle a t: la actual o una alcanzable, pegada a t */
 function chargeSpots(u,t){
-  const cells=[[u.x,u.y],...[...reachable(u)].map(k=>k.split(',').map(Number))];
+  let cells=[[u.x,u.y],...[...reachable(u)].map(k=>k.split(',').map(Number))];
+  /* La carga va en línea recta: solo casillas libres en cruz, sin saltar nada */
+  if(u.ability==='carga'){cells=[[u.x,u.y]];for(const [dx,dy] of DIRS)for(let k=1;k<=u.spd;k++){const x=u.x+dx*k,y=u.y+dy*k;if(!walkable(x,y)||unitAt(x,y))break;cells.push([x,y]);}}
   return cells.filter(([x,y])=>cheb({x,y},t)===1).sort((a,b)=>man(u,{x:a[0],y:a[1]})-man(u,{x:b[0],y:b[1]}));
 }
 function abilityTargets(u){
@@ -854,7 +932,9 @@ function abilityTargets(u){
 async function useAbility(u,t){
   const a=u.ability,ab=ABILITIES[a];G.mode=null;
   if(a==='curar'){t.hp=Math.min(t.maxhp,t.hp+1);log(`✚ ${who(u)} cura a ${who(t)}: +1 ❤️.`);spend(u);render();return;}
-  if(a==='carga'||a==='picada'){const [x,y]=chargeSpots(u,t)[0];u.x=x;u.y=y;log(`${ab.icon} ${who(u)} usa ${ab.name}.`);await attack(u,t,'close');return;}
+  if(a==='carga'||a==='picada'){const [x,y]=chargeSpots(u,t)[0];u.x=x;u.y=y;log(`${ab.icon} ${who(u)} usa ${ab.name}.`);
+    if(a==='picada'){u.tired=true;log(`😴 ${who(u)} queda agotado: pierde su próximo turno.`);}
+    await attack(u,t,'close');return;}
   if(a==='garras'){log(`🐾 ${who(u)} usa Garras.`);await attack(u,t,'close',{mod:-20,why:'🐾 garras',keep:true});
     if(G.winner)return;
     if(G.units.includes(t))await attack(u,t,'close',{mod:-20,why:'🐾 garras'});else{spend(u);render();}}
@@ -888,7 +968,7 @@ function render(){
     const cls=['cell',t==='~'?'water':'land'];if((x+y)%2)cls.push('alt');if(tile(x,y+1)==='#')cls.push('edge');
     if(mv.has(k))cls.push('mv');if(rg.has(k))cls.push('atk');if(u&&tg.includes(u))cls.push(tgCls);
     const ob=OB[t]?`<span class="ob">${OB[t]}</span>`:'';
-    const tok=u?`<div class="tok j${u.team}${u.acted&&u.team===G.turn?' acted':''}${G.sel===u.id?' sel':''}" style="--c:${u.color}"><span class="nm">${esc(u.name)}</span><span class="hp">${u.hp}</span>${u.poison?'<span class="psn" title="Envenenado">🧪</span>':''}</div>`:'';
+    const tok=u?`<div class="tok j${u.team}${u.acted&&u.team===G.turn?' acted':''}${G.sel===u.id?' sel':''}" style="--c:${u.color}"><span class="nm">${esc(u.name)}</span><span class="hp">${u.hp}</span>${u.poison?'<span class="psn" title="Envenenado">🧪</span>':''}${u.tired||u.resting?'<span class="zz" title="Agotado: pierde su próximo turno">😴</span>':''}</div>`:'';
     h+=`<button class="${cls.join(' ')}" style="--g1:${G.map.g1};--g2:${G.map.g2}" data-x="${x}" data-y="${y}" aria-label="Casilla ${x+1},${y+1}${u?': '+esc(u.name)+(u.team===2?' rival':''):''}">${ob}${tok}</button>`;}
   b.innerHTML=h;
 
@@ -919,7 +999,7 @@ function render(){
   else if(!s){up.innerHTML=`<p class="hint">Tocá una ficha para ver sus stats. Si es tuya y no actuó todavía, elegí qué hace: mover, pegar, disparar o usar su habilidad.</p>`;}
   else{const ok=canAct(s);
     const ab=s.ability&&ABILITIES[s.ability];
-    const st=(s.poison?'🧪 envenenado · ':'')+(s.team!==1?'Ficha rival':s.acted?'Ya actuó este turno':G.turn!==1?'Turno del rival':G.actions<=0?'Sin acciones':'Lista para actuar');
+    const st=(s.poison?'🧪 envenenado · ':'')+(s.tired||s.resting?'😴 agotado · ':'')+(s.team!==1?'Ficha rival':s.acted?'Ya actuó este turno':G.turn!==1?'Turno del rival':G.actions<=0?'Sin acciones':'Lista para actuar');
     up.innerHTML=`<div class="unit-head"><span class="dot j${s.team}" style="--c:${s.color}"></span><div><b>${esc(s.name)}</b><br><small>${teamName(s.team)} · ❤️ ${s.hp}/${s.maxhp} · ${st}</small></div></div>
     ${statsHTML(s)}
     ${ab?`<p class="abil">${ab.icon} <b>${ab.name}</b>: ${ab.desc}</p>`:''}
@@ -942,6 +1022,7 @@ $('btn-flee').onclick=flee;
 buildWorld();
 for(let i=0;i<6;i++)spawnGroup();
 wlog('Tu equipo sale del castillo. Tocá el mapa para moverte.');
+if(W.town)W.offers[W.town.id]=makeOffers(W.town);
 renderWorldPanel();showScreen();drawWorld();
 requestAnimationFrame(tick);
 </script>

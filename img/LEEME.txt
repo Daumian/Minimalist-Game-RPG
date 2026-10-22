@@ -1,0 +1,13 @@
+IMÁGENES DE PERSONAJES
+
+Poné acá un PNG por personaje con el nombre de su id y el juego lo usa en lugar del pixel art
+(en las tarjetas y en "Ver"). Si falta alguna imagen, ese personaje sigue con su pixel art.
+
+Ids de los personajes coleccionables:
+  bruno.png  lia.png  pico.png  toro.png  muro.png  ojo.png  aguja.png  rayo.png  zarpa.png  lobogris.png
+Ids de los rivales comunes:
+  bandido.png  arquero.png  lobo.png  cuervo.png  minero.png  nomada.png  templario.png
+
+Consejos:
+- Fondo transparente y proporción vertical, más o menos 20x26 (o múltiplos: 40x52, 80x104, 160x208).
+- Si es pixel art, se ve nítido aunque se agrande.
