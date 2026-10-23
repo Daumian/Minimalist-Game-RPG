@@ -34,7 +34,7 @@ Combate (vos contra la máquina):
 - Árboles, casas, pozos y rocas tapan la vista. Cada ficha, calabaza, arbusto o cactus en el medio resta 10% al tiro.
 - Habilidades: Liderazgo (Bruno), Curar (Lía), Picada (Pico, Rayo), Carga (Toro), Escudo (Muro),
   Tiro rasante (Ojo), Veneno (Aguja), Garras (Zarpa), Manada (Lobo Gris). Las de acción tienen botón propio.
-  La Carga va solo en línea recta. Después de una Picada, el volador pierde su próximo turno.
+  La Carga va solo en línea recta. Después de una Picada, el volador queda aturdido y pierde su próximo turno.
 - Los mapas de combate se generan al azar (a veces sale uno de los hechos a mano).
 
 El progreso (colección, equipo, oro, encargos y posición) se guarda en el navegador.
