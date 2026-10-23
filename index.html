@@ -47,7 +47,7 @@ header p{margin:0;color:var(--muted)}
 .cell.atk::after{content:"";position:absolute;inset:0;background:rgba(227,54,62,.22)}
 .cell.heal .tok{box-shadow:0 0 0 3px var(--good),0 0 0 7px rgba(63,191,110,.4)}
 .tok .psn{position:absolute;top:-7px;right:-7px;font-size:13px;z-index:2}
-.tok .zz{position:absolute;top:-7px;left:-7px;font-size:13px;z-index:2}
+.tok .zz{position:absolute;top:-9px;left:-9px;font-size:17px;z-index:2;filter:drop-shadow(0 1px 1px #000)}
 .quest{background:var(--panel2);border-radius:5px;padding:8px 10px;display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap;font-size:14px}
 .quest.offer{background:transparent;border:1px dashed #6a6a72}
 .quest>div{flex:1;min-width:0}
@@ -273,7 +273,7 @@ const ABILITIES={
   curar:{name:'Curar',icon:'✚',act:true,desc:'Un aliado pegado recupera 1 ❤️.'},
   rasante:{name:'Tiro rasante',icon:'🎯',desc:'Sus tiros ignoran la cubierta de fichas, arbustos y calabazas.'},
   veneno:{name:'Veneno',icon:'🧪',desc:'Cuando pega, envenena: el rival pierde 1 ❤️ más al empezar su próximo turno.'},
-  picada:{name:'Picada',icon:'🦅',act:true,desc:'Vuela y pega de cerca en la misma acción, pero queda agotado y pierde su próximo turno.'},
+  picada:{name:'Picada',icon:'🦅',act:true,desc:'Vuela y pega de cerca en la misma acción, pero queda aturdido 💫 y pierde su próximo turno.'},
   manada:{name:'Manada',icon:'🐺',desc:'Pega de cerca con +10% por cada aliado que también esté pegado al blanco (hasta +20%).'},
   garras:{name:'Garras',icon:'🐾',act:true,desc:'Dos ataques de cerca seguidos, cada uno con −20%.'}
 };
@@ -322,7 +322,7 @@ const MAPS=[
     '##.1.1##']}
 ];
 /* Mundo: 7×7 zonas de 900×830; la (0,0) es la del castillo. En pantalla X crece al este e Y al norte */
-const ZW=900,ZH=830,ZR=3,VW=900,VH=830,CAM_M=280;
+const ZW=900,ZH=830,ZR=3,VW=900,VH=830,CAM_M=320;
 const BIOMES={
   pradera:{name:'Pradera',tint:'#f4f1e8',foes:['bandido','arquero','cuervo','lobo'],stars:[]},
   bosque:{name:'Bosque',tint:'#eaefdc',foes:['arquero','arquero','bandido','lobo','lobo'],stars:['lia','ojo','aguja','lobogris']},
@@ -837,7 +837,7 @@ function endTurn(){
   if(G.winner)return;
   G.turn=3-G.turn;if(G.turn===1)G.round++;
   G.units.forEach(u=>{if(u.team!==G.turn)return;u.acted=false;u.resting=false;
-    if(u.tired){u.tired=false;u.resting=true;u.acted=true;log(`😴 ${who(u)} descansa este turno.`);}});
+    if(u.tired){u.tired=false;u.resting=true;u.acted=true;log(`💫 ${who(u)} está aturdido: pierde este turno.`);}});
   for(const u of G.units.filter(u=>u.team===G.turn&&u.poison)){u.poison=false;u.hp--;log(`🧪 ${who(u)} sufre el veneno: −1 ❤️.`);
     if(u.hp<=0){G.units=G.units.filter(x=>x!==u);log(`💀 ${who(u)} queda KO.`);}}
   checkWinner();if(G.winner){G.mode=null;G.sel=null;return;}
@@ -933,7 +933,7 @@ async function useAbility(u,t){
   const a=u.ability,ab=ABILITIES[a];G.mode=null;
   if(a==='curar'){t.hp=Math.min(t.maxhp,t.hp+1);log(`✚ ${who(u)} cura a ${who(t)}: +1 ❤️.`);spend(u);render();return;}
   if(a==='carga'||a==='picada'){const [x,y]=chargeSpots(u,t)[0];u.x=x;u.y=y;log(`${ab.icon} ${who(u)} usa ${ab.name}.`);
-    if(a==='picada'){u.tired=true;log(`😴 ${who(u)} queda agotado: pierde su próximo turno.`);}
+    if(a==='picada'){u.tired=true;log(`💫 ${who(u)} queda aturdido: pierde su próximo turno.`);}
     await attack(u,t,'close');return;}
   if(a==='garras'){log(`🐾 ${who(u)} usa Garras.`);await attack(u,t,'close',{mod:-20,why:'🐾 garras',keep:true});
     if(G.winner)return;
@@ -968,7 +968,7 @@ function render(){
     const cls=['cell',t==='~'?'water':'land'];if((x+y)%2)cls.push('alt');if(tile(x,y+1)==='#')cls.push('edge');
     if(mv.has(k))cls.push('mv');if(rg.has(k))cls.push('atk');if(u&&tg.includes(u))cls.push(tgCls);
     const ob=OB[t]?`<span class="ob">${OB[t]}</span>`:'';
-    const tok=u?`<div class="tok j${u.team}${u.acted&&u.team===G.turn?' acted':''}${G.sel===u.id?' sel':''}" style="--c:${u.color}"><span class="nm">${esc(u.name)}</span><span class="hp">${u.hp}</span>${u.poison?'<span class="psn" title="Envenenado">🧪</span>':''}${u.tired||u.resting?'<span class="zz" title="Agotado: pierde su próximo turno">😴</span>':''}</div>`:'';
+    const tok=u?`<div class="tok j${u.team}${u.acted&&u.team===G.turn?' acted':''}${G.sel===u.id?' sel':''}" style="--c:${u.color}"><span class="nm">${esc(u.name)}</span><span class="hp">${u.hp}</span>${u.poison?'<span class="psn" title="Envenenado">🧪</span>':''}${u.tired||u.resting?'<span class="zz" title="Aturdido: pierde su próximo turno">💫</span>':''}</div>`:'';
     h+=`<button class="${cls.join(' ')}" style="--g1:${G.map.g1};--g2:${G.map.g2}" data-x="${x}" data-y="${y}" aria-label="Casilla ${x+1},${y+1}${u?': '+esc(u.name)+(u.team===2?' rival':''):''}">${ob}${tok}</button>`;}
   b.innerHTML=h;
 
@@ -999,7 +999,7 @@ function render(){
   else if(!s){up.innerHTML=`<p class="hint">Tocá una ficha para ver sus stats. Si es tuya y no actuó todavía, elegí qué hace: mover, pegar, disparar o usar su habilidad.</p>`;}
   else{const ok=canAct(s);
     const ab=s.ability&&ABILITIES[s.ability];
-    const st=(s.poison?'🧪 envenenado · ':'')+(s.tired||s.resting?'😴 agotado · ':'')+(s.team!==1?'Ficha rival':s.acted?'Ya actuó este turno':G.turn!==1?'Turno del rival':G.actions<=0?'Sin acciones':'Lista para actuar');
+    const st=(s.poison?'🧪 envenenado · ':'')+(s.tired?'💫 aturdido (pierde el próximo turno) · ':s.resting?'💫 aturdido: pierde este turno · ':'')+(s.team!==1?'Ficha rival':s.acted?'Ya actuó este turno':G.turn!==1?'Turno del rival':G.actions<=0?'Sin acciones':'Lista para actuar');
     up.innerHTML=`<div class="unit-head"><span class="dot j${s.team}" style="--c:${s.color}"></span><div><b>${esc(s.name)}</b><br><small>${teamName(s.team)} · ❤️ ${s.hp}/${s.maxhp} · ${st}</small></div></div>
     ${statsHTML(s)}
     ${ab?`<p class="abil">${ab.icon} <b>${ab.name}</b>: ${ab.desc}</p>`:''}
